@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="OpenJL.vcxproj" Id="fa179a20-4ab4-42e1-ad2c-fda1c9f7cd6a" />
+</Solution>
