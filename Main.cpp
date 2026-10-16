@@ -22,7 +22,6 @@ std::shared_ptr<Node> rootScene;
 std::shared_ptr<MeshNode> sunNode;
 std::shared_ptr<MeshNode> earthNode;
 
-// Шейдеры (простые, цвет передается константой)
 const char* vertexShaderSrc = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "uniform mat4 u_MVP;\n"
@@ -35,10 +34,9 @@ const char* fragmentShaderSrc = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
-"   FragColor = vec4(1.0, 0.6, 0.1, 1.0);\n" // Оранжево-желтый цвет Солнца/Земли
+"   FragColor = vec4(1.0, 0.6, 0.1, 1.0);\n" 
 "}\n";
 
-// Компиляция шейдеров
 GLuint compileShader(GLenum type, const char* source) {
     GLuint shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, NULL);
@@ -57,7 +55,6 @@ void initShaders() {
     glDeleteShader(fs);
 }
 
-// Создание геометрии куба
 void initCube() {
     float vertices[] = {
         -0.5f, -0.5f, -0.5f,   0.5f, -0.5f, -0.5f,   0.5f,  0.5f, -0.5f,  -0.5f,  0.5f, -0.5f,
@@ -91,20 +88,15 @@ void initCube() {
     glBindVertexArray(0);
 }
 
-// ==========================================
-// 3. ИНИЦИАЛИЗАЦИЯ И ОТРИСОВКА СЦЕНЫ
-// ==========================================
 void initScene() {
     rootScene = std::make_shared<Node>();
 
-    // Солнце (в центре)
     sunNode = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
     sunNode->setScale(Vector3(1.5f, 1.5f, 1.5f));
     rootScene->addChild(sunNode);
 
-    // Земля (вращается вокруг Солнца, привязана к нему как дочерний узел)
     earthNode = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
-    earthNode->setPosition(Vector3(4.0f, 0.0f, 0.0f)); // Смещение от Солнца
+    earthNode->setPosition(Vector3(4.0f, 0.0f, 0.0f)); 
     earthNode->setScale(Vector3(0.5f, 0.5f, 0.5f));
     sunNode->addChild(earthNode);
 }
@@ -114,12 +106,10 @@ void display() {
 
     glUseProgram(shaderProgram);
 
-    // Камера и проекция
     glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 5.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
     glm::mat4 viewProj = proj * view;
 
-    // Анимация вращения системы
     static float angle = 0.0f;
     angle += 0.8f;
 
@@ -127,7 +117,6 @@ void display() {
     sunNode->setRotation(Vector3(0.0f, angle, 0.0f));
     earthNode->setRotation(Vector3(0.0f, angle * 2.0f, 0.0f));
 
-    // Обновляем дерево узлов
     rootScene->update(0.016f);
 
     rootScene->render(shaderProgram, viewProj);
