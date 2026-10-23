@@ -3,7 +3,7 @@
 #include <random>
 #include <algorithm>
 
-enum class GameState { Explore, Battle, Victory, Defeat };
+enum class GameState { Explore, Battle, Victory, Defeat, Upgrade };
 enum class PlayerAction { Attack, Skill, Defend };
 
 struct Fighter {

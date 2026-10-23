@@ -30,12 +30,12 @@
     <ClCompile Include="Modules\MeshNode.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\..\Downloads\freeglut_cmake\bin\Debug\freeglutd.pdb" />
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="..\..\..\..\Downloads\freeglut_cmake\lib\Debug\freeglutd.lib" />
+    <ClCompile Include="Modules\Texture.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\ModelLoader.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Modules\Node.h">
@@ -45,6 +45,12 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Modules\MeshNode.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Texture.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\ModelLoader.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
