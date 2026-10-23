@@ -1,4 +1,3 @@
-
 #include "Modules/Vector3.h" 
 #include "Modules/Node.h"
 #include "Modules/MeshNode.h"
@@ -12,8 +11,8 @@
 #include <memory>
 #include "Game/Battle.h"
 #include <cmath>
-
-
+#include <random>
+#include <string>
 
 GLuint shaderProgram = 0;
 GLuint cubeVAO = 0;
@@ -24,9 +23,26 @@ std::shared_ptr<Node> rootScene;
 GameState state = GameState::Explore;
 Battle battle;
 Fighter playerStats{ "Hero", 40, 40, 9, 2, 10, 10 };
-Fighter enemyStats{ "Slime", 25, 25, 7, 1, 0, 0 };
 
-std::shared_ptr<MeshNode> player, enemy, floorNode, enemyHpBar, playerHpBar;
+struct EnemyType { const char* name; int hp, atk, def; Vector3 color; };
+const EnemyType enemyTypes[] = {
+    { "Slime",  20, 6, 1, Vector3(0.7f, 0.3f, 0.9f) },
+    { "Goblin", 28, 8, 2, Vector3(0.9f, 0.5f, 0.1f) },
+    { "Golem",  40, 7, 4, Vector3(0.5f, 0.5f, 0.55f) },
+};
+
+struct Enemy {
+    Fighter stats;
+    std::shared_ptr<MeshNode> body, hpBar;
+};
+
+std::vector<Enemy> enemies;
+int currentEnemy = -1;
+int floorNum = 1;
+int kills = 0;
+int metaAttackBonus = 0;
+
+std::shared_ptr<MeshNode> player, floorNode, playerHpBar;
 bool keys[256] = {};
 int lastTime = 0;
 
@@ -81,17 +97,52 @@ void initCube() {
     glGenBuffers(1, &EBO);
 
     glBindVertexArray(cubeVAO);
-
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
     glBindVertexArray(0);
+}
+
+void spawnEnemies() {
+    static std::mt19937 rng{ std::random_device{}() };
+    std::uniform_int_distribution<int> pickType(0, 2);
+    std::uniform_real_distribution<float> pickPos(-8.f, 8.f);
+    float scale = 1.0f + 0.15f * (floorNum - 1);
+    
+    for (auto& e : enemies) {
+        const EnemyType& t = enemyTypes[pickType(rng)];
+        int hp = (int)(t.hp * scale);
+        e.stats = Fighter{ t.name, hp, hp, (int)(t.atk * scale), t.def, 0, 0 };
+        e.body->color = t.color;
+        Vector3 p;
+        do { p = Vector3(pickPos(rng), 0, pickPos(rng)); }
+        while (std::sqrt(p.X * p.X + p.Z * p.Z) < 4.0f);
+        e.body->setPosition(p);
+    }
+}
+
+void resetRun() {
+    floorNum = 1;
+    kills = 0;
+    playerStats = Fighter{ "Hero", 40, 40, 9 + metaAttackBonus, 2, 10, 10 };
+    spawnEnemies();
+    player->setPosition(Vector3(0, 0, 0));
+    state = GameState::Explore;
+}
+
+void finishUpgrade() {
+    bool allDead = true;
+    for (auto& e : enemies) if (e.stats.alive()) allDead = false;
+    
+    if (allDead) {
+        floorNum++;
+        spawnEnemies();
+        player->setPosition(Vector3(0, 0, 0));
+    }
+    state = GameState::Explore;
 }
 
 void initScene() {
@@ -107,18 +158,20 @@ void initScene() {
     player->color = Vector3(0.2f, 0.5f, 1.0f);
     rootScene->addChild(player);
 
-    enemy = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
-    enemy->setPosition(Vector3(5, 0, -4));
-    enemy->color = Vector3(0.9f, 0.2f, 0.2f);
-    rootScene->addChild(enemy);
-
     playerHpBar = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
     playerHpBar->color = Vector3(0.1f, 0.9f, 0.1f);
     rootScene->addChild(playerHpBar);
 
-    enemyHpBar = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
-    enemyHpBar->color = Vector3(0.9f, 0.1f, 0.1f);
-    rootScene->addChild(enemyHpBar);
+    for (int i = 0; i < 3; i++) {
+        Enemy e;
+        e.body = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
+        e.hpBar = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
+        e.hpBar->color = Vector3(0.9f, 0.1f, 0.1f);
+        rootScene->addChild(e.body);
+        rootScene->addChild(e.hpBar);
+        enemies.push_back(e);
+    }
+    spawnEnemies();
 }
 
 void keyDown(unsigned char k, int, int) {
@@ -128,15 +181,18 @@ void keyDown(unsigned char k, int, int) {
         if (k == '2') battle.playerAct(PlayerAction::Skill);
         if (k == '3') battle.playerAct(PlayerAction::Defend);
     }
-    if ((state == GameState::Victory || state == GameState::Defeat) && k == ' ') {
-        // roguelike restart, reset player and enemy stats, and return to exploration
-        if (state == GameState::Defeat) { playerStats.hp = playerStats.maxHp; playerStats.mp = playerStats.maxMp; }
-        enemyStats.hp = enemyStats.maxHp;
-        enemy->setPosition(Vector3(5, 0, -4));
-        player->setPosition(Vector3(0, 0, 0));
-        state = GameState::Explore;
+    else if (state == GameState::Upgrade) {
+        if (k == '1')      playerStats.attack += 2;
+        else if (k == '2') { playerStats.maxHp += 8; playerStats.hp = playerStats.maxHp; }
+        else if (k == '3') { playerStats.maxMp += 4; playerStats.mp = playerStats.maxMp; }
+        else return;
+        finishUpgrade();
+    }
+    else if (state == GameState::Defeat && k == ' ') {
+        resetRun();
     }
 }
+
 void keyUp(unsigned char k, int, int) { keys[k] = false; }
 
 void setBar(std::shared_ptr<MeshNode>& bar, Vector3 base, int hp, int maxHp) {
@@ -155,31 +211,57 @@ void updateGame(float dt) {
         if (keys['d']) p.X += speed;
         player->setPosition(p);
 
-        Vector3 e = enemy->getPosition();
-        float dx = p.X - e.X, dz = p.Z - e.Z;
-        if (std::sqrt(dx * dx + dz * dz) < 1.3f) {
-            battle.start(&playerStats, &enemyStats);
-            state = GameState::Battle;
+        for (size_t i = 0; i < enemies.size(); i++) {
+            if (!enemies[i].stats.alive()) continue;
+            Vector3 e = enemies[i].body->getPosition();
+            float dx = p.X - e.X, dz = p.Z - e.Z;
+            if (std::sqrt(dx * dx + dz * dz) < 1.3f) {
+                currentEnemy = (int)i;
+                battle.start(&playerStats, &enemies[i].stats);
+                state = GameState::Battle;
+                break;
+            }
         }
     }
     else if (state == GameState::Battle) {
         battle.update(dt);
-        if (battle.finished)
-            state = battle.playerWon ? GameState::Victory : GameState::Defeat;
+        if (battle.finished) {
+            if (battle.playerWon) {
+                kills++;
+                playerStats.mp = std::min(playerStats.maxMp, playerStats.mp + 3);
+                state = GameState::Upgrade;
+            } else {
+                metaAttackBonus++;      
+                state = GameState::Defeat;
+            }
+        }
     }
 
     setBar(playerHpBar, player->getPosition(), playerStats.hp, playerStats.maxHp);
-    setBar(enemyHpBar, enemy->getPosition(), enemyStats.hp, enemyStats.maxHp);
-    enemy->setScale(enemyStats.alive() ? Vector3(1, 1, 1) : Vector3(0, 0, 0));
-    enemyHpBar->setScale(enemyStats.alive() ? enemyHpBar->getScale() : Vector3(0, 0, 0));
+    
+    for (auto& e : enemies) {
+        if (e.stats.alive()) {
+            e.body->setScale(Vector3(1, 1, 1));
+            setBar(e.hpBar, e.body->getPosition(), e.stats.hp, e.stats.maxHp);
+        } else {
+            e.body->setScale(Vector3(0, 0, 0));
+            e.hpBar->setScale(Vector3(0, 0, 0));
+        }
+    }
 
-    // Update window title with game state and player stats
-    std::string t = "HP " + std::to_string(playerStats.hp) + "/" + std::to_string(playerStats.maxHp)
-        + " MP " + std::to_string(playerStats.mp);
-    if (state == GameState::Battle) t += " | [1]Attack [2]Skill [3]Defend | " + battle.log;
-    else if (state == GameState::Victory) t += " | VICTORY - SPACE to continue";
-    else if (state == GameState::Defeat) t += " | DEFEAT - SPACE to restart";
-    else t += " | WASD to move, touch the red cube";
+    std::string t = "Floor " + std::to_string(floorNum) + " | Kills " + std::to_string(kills)
+        + " | HP " + std::to_string(playerStats.hp) + "/" + std::to_string(playerStats.maxHp)
+        + " MP " + std::to_string(playerStats.mp) + " ATK " + std::to_string(playerStats.attack);
+    
+    if (state == GameState::Battle)
+        t += " | vs " + enemies[currentEnemy].stats.name + " | [1]Attack [2]Skill [3]Defend | " + battle.log;
+    else if (state == GameState::Upgrade)
+        t += " | LOOT: [1] +2 Attack  [2] +8 Max HP (heal)  [3] +4 Max MP";
+    else if (state == GameState::Defeat)
+        t += " | YOU DIED (permanent +1 ATK) - SPACE to restart";
+    else
+        t += " | WASD to move, touch an enemy";
+        
     glutSetWindowTitle(t.c_str());
 }
 
@@ -208,12 +290,11 @@ void timer(int) {
     glutTimerFunc(16, timer, 0); 
 }
 
-
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(800, 600);
-    glutCreateWindow("OpenGL Scene Graph - Test Sun");
+    glutCreateWindow("OpenGL Scene Graph");
 
     if (!gladLoadGL()) {
         std::cerr << "Failed to initialize GLAD!" << std::endl;
