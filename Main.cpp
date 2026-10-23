@@ -1,6 +1,8 @@
-#include "Modules/Vector3.h" 
+#include "Modules/Vector3.h"
 #include "Modules/Node.h"
 #include "Modules/MeshNode.h"
+#include "Modules/ModelLoader.h" 
+#include "Modules/Texture.h"  
 
 #include <glad/glad.h>
 #include <GL/freeglut.h>
@@ -19,12 +21,16 @@ GLuint cubeVAO = 0;
 int cubeIndexCount = 36;
 
 std::shared_ptr<Node> rootScene;
-
 GameState state = GameState::Explore;
 Battle battle;
 Fighter playerStats{ "Hero", 40, 40, 9, 2, 10, 10 };
 
-struct EnemyType { const char* name; int hp, atk, def; Vector3 color; };
+struct EnemyType {
+    const char* name;
+    int hp, atk, def;
+    Vector3 color;
+};
+
 const EnemyType enemyTypes[] = {
     { "Slime",  20, 6, 1, Vector3(0.7f, 0.3f, 0.9f) },
     { "Goblin", 28, 8, 2, Vector3(0.9f, 0.5f, 0.1f) },
@@ -46,18 +52,30 @@ std::shared_ptr<MeshNode> player, floorNode, playerHpBar;
 bool keys[256] = {};
 int lastTime = 0;
 
-const char* vertexShaderSrc = "#version 330 core\n"
+// new shaders for texture support
+const char* vertexShaderSrc =
+"#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
+"layout (location = 2) in vec2 aUV;\n"
 "uniform mat4 u_MVP;\n"
+"out vec2 vUV;\n"
 "void main()\n"
 "{\n"
+"   vUV = aUV;\n"
 "   gl_Position = u_MVP * vec4(aPos, 1.0);\n"
 "}\n";
 
-const char* fragmentShaderSrc = "#version 330 core\n"
+const char* fragmentShaderSrc =
+"#version 330 core\n"
+"in vec2 vUV;\n"
 "out vec4 FragColor;\n"
 "uniform vec3 u_Color;\n"
-"void main() { FragColor = vec4(u_Color, 1.0); }\n";
+"uniform sampler2D u_Tex;\n"
+"uniform bool u_UseTex;\n"
+"void main() {\n"
+"   vec3 c = u_UseTex ? texture(u_Tex, vUV).rgb * u_Color : u_Color;\n"
+"   FragColor = vec4(c, 1.0);\n"
+"}\n";
 
 GLuint compileShader(GLenum type, const char* source) {
     GLuint shader = glCreateShader(type);
@@ -101,6 +119,7 @@ void initCube() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
@@ -111,15 +130,14 @@ void spawnEnemies() {
     std::uniform_int_distribution<int> pickType(0, 2);
     std::uniform_real_distribution<float> pickPos(-8.f, 8.f);
     float scale = 1.0f + 0.15f * (floorNum - 1);
-    
+
     for (auto& e : enemies) {
         const EnemyType& t = enemyTypes[pickType(rng)];
         int hp = (int)(t.hp * scale);
         e.stats = Fighter{ t.name, hp, hp, (int)(t.atk * scale), t.def, 0, 0 };
         e.body->color = t.color;
         Vector3 p;
-        do { p = Vector3(pickPos(rng), 0, pickPos(rng)); }
-        while (std::sqrt(p.X * p.X + p.Z * p.Z) < 4.0f);
+        do { p = Vector3(pickPos(rng), 0, pickPos(rng)); } while (std::sqrt(p.X * p.X + p.Z * p.Z) < 4.0f);
         e.body->setPosition(p);
     }
 }
@@ -136,7 +154,7 @@ void resetRun() {
 void finishUpgrade() {
     bool allDead = true;
     for (auto& e : enemies) if (e.stats.alive()) allDead = false;
-    
+
     if (allDead) {
         floorNum++;
         spawnEnemies();
@@ -154,8 +172,17 @@ void initScene() {
     floorNode->color = Vector3(0.3f, 0.7f, 0.3f);
     rootScene->addChild(floorNode);
 
-    player = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
-    player->color = Vector3(0.2f, 0.5f, 1.0f);
+	// use loadOBJ to load the hero model and create a MeshNode for the player
+    Model heroModel = loadOBJ("assets/hero.obj");
+    if (heroModel.vao != 0) {
+        player = std::make_shared<MeshNode>(heroModel.vao, heroModel.indexCount);
+        player->textureId = loadTexture("assets/hero.png");
+        player->color = Vector3(1.0f, 1.0f, 1.0f); 
+    }
+    else {
+        player = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
+        player->color = Vector3(0.2f, 0.5f, 1.0f);
+    }
     rootScene->addChild(player);
 
     playerHpBar = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
@@ -230,20 +257,22 @@ void updateGame(float dt) {
                 kills++;
                 playerStats.mp = std::min(playerStats.maxMp, playerStats.mp + 3);
                 state = GameState::Upgrade;
-            } else {
-                metaAttackBonus++;      
+            }
+            else {
+                metaAttackBonus++;
                 state = GameState::Defeat;
             }
         }
     }
 
     setBar(playerHpBar, player->getPosition(), playerStats.hp, playerStats.maxHp);
-    
+
     for (auto& e : enemies) {
         if (e.stats.alive()) {
             e.body->setScale(Vector3(1, 1, 1));
             setBar(e.hpBar, e.body->getPosition(), e.stats.hp, e.stats.maxHp);
-        } else {
+        }
+        else {
             e.body->setScale(Vector3(0, 0, 0));
             e.hpBar->setScale(Vector3(0, 0, 0));
         }
@@ -252,7 +281,7 @@ void updateGame(float dt) {
     std::string t = "Floor " + std::to_string(floorNum) + " | Kills " + std::to_string(kills)
         + " | HP " + std::to_string(playerStats.hp) + "/" + std::to_string(playerStats.maxHp)
         + " MP " + std::to_string(playerStats.mp) + " ATK " + std::to_string(playerStats.attack);
-    
+
     if (state == GameState::Battle)
         t += " | vs " + enemies[currentEnemy].stats.name + " | [1]Attack [2]Skill [3]Defend | " + battle.log;
     else if (state == GameState::Upgrade)
@@ -261,7 +290,7 @@ void updateGame(float dt) {
         t += " | YOU DIED (permanent +1 ATK) - SPACE to restart";
     else
         t += " | WASD to move, touch an enemy";
-        
+
     glutSetWindowTitle(t.c_str());
 }
 
@@ -287,7 +316,7 @@ void display() {
 
 void timer(int) {
     glutPostRedisplay();
-    glutTimerFunc(16, timer, 0); 
+    glutTimerFunc(16, timer, 0);
 }
 
 int main(int argc, char** argv) {
