@@ -26,8 +26,9 @@ msbuild OpenJL.vcxproj /p:Configuration=Debug /p:Platform=x64
 ```
 
 Run from the repository root so relative asset paths resolve. The bundled
-`freeglutd.dll` must be available to the executable (copy it next to the exe if
-Windows reports a missing DLL). Bundled libraries are intended for x64.
+FreeGLUT runtime is copied next to the executable automatically in Debug x64.
+The bundled import library requests `freeglut.dll`, so the build copies the
+provided `freeglutd.dll` under that name. Bundled libraries are intended for x64.
 Release has not been validated yet; it needs its matching FreeGLUT runtime DLL.
 
 Rendering uses OpenGL, GLAD, GLM, FreeGLUT and stb_image. GLFW is bundled but is
@@ -42,16 +43,19 @@ not used by the current window/input implementation. No engine is required.
 | Upgrade | 1 +2 attack, 2 +8 max HP and heal, 3 +4 max MP and refill |
 | Defeat | Space to restart |
 
-Health bars appear above actors. Stats, actions and battle messages currently
-appear in the window title; a proper on-screen HUD is planned.
+The on-screen HUD shows HP/MP bars, floor, kills, attack, current turn and battle
+messages. Click an action button or use its keyboard shortcut. Battle buttons
+dim during the enemy turn; the skill button also dims below 3 MP. Upgrade and
+restart buttons are clickable too. The HUD and mouse coordinates scale together
+when the window is resized. Its small built-in bitmap font uses OpenGL triangles
+and adds no dependency.
 
 ## Next milestones
 
-1. On-screen HUD: HP/MP, current turn, combat log and clickable action buttons.
-2. Blocky character models, arena decoration, normals and simple lighting.
-3. Attack/hit animations and a distinct battle camera.
-4. Enemy spacing, balance and a final encounter with a clear win screen.
-5. Save meta progression between launches; prepare a demo and presentation.
+1. Blocky character models, arena decoration, normals and simple lighting.
+2. Attack/hit animations and a distinct battle camera.
+3. Enemy spacing, balance and a final encounter with a clear win screen.
+4. Save meta progression between launches; prepare a demo and presentation.
 
 Suggested split for three teammates (assign names together):
 

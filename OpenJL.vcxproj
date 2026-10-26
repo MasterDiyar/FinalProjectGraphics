@@ -158,6 +158,7 @@
     <ClCompile Include="Modules\Vector3.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Game\Hud.h" />
     <ClInclude Include="Modules\MeshNode.h" />
     <ClInclude Include="Modules\ModelLoader.h" />
     <ClInclude Include="Modules\Node.h" />
@@ -165,6 +166,10 @@
     <ClInclude Include="Modules\Vector3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="CopyDebugFreeGlutRuntime" AfterTargets="Build" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <!-- The bundled import library requests freeglut.dll. -->
+    <Copy SourceFiles="$(ProjectDir)freeglutd.dll" DestinationFiles="$(OutDir)freeglut.dll" SkipUnchangedFiles="true" />
+  </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>

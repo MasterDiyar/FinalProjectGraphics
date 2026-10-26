@@ -12,6 +12,7 @@
 #include <vector>
 #include <memory>
 #include "Game/Battle.h"
+#include "Game/Hud.h"
 #include <cmath>
 #include <random>
 #include <string>
@@ -25,6 +26,7 @@ int cubeIndexCount = 36;
 std::shared_ptr<Node> rootScene;
 GameState state = GameState::Explore;
 Battle battle;
+Hud hud;
 Fighter playerStats{ "Hero", 40, 40, 9, 2, 10, 10 };
 
 struct EnemyType {
@@ -220,9 +222,7 @@ void initScene() {
     spawnEnemies();
 }
 
-void keyDown(unsigned char k, int, int) {
-    k = static_cast<unsigned char>(std::tolower(k));
-    keys[k] = true;
+void chooseAction(unsigned char k) {
     if (state == GameState::Battle) {
         if (k == '1') battle.playerAct(PlayerAction::Attack);
         if (k == '2') battle.playerAct(PlayerAction::Skill);
@@ -238,6 +238,82 @@ void keyDown(unsigned char k, int, int) {
     else if (state == GameState::Defeat && k == ' ') {
         resetRun();
     }
+}
+
+void keyDown(unsigned char k, int, int) {
+    k = static_cast<unsigned char>(std::tolower(k));
+    keys[k] = true;
+    chooseAction(k);
+}
+
+bool actionEnabled(int index) {
+    if (state == GameState::Upgrade || state == GameState::Defeat) return true;
+    return state == GameState::Battle && battle.playerTurn && !battle.finished
+        && (index != 1 || playerStats.mp >= 3);
+}
+
+void mouseDown(int button, int pressed, int x, int y) {
+    if (button != GLUT_LEFT_BUTTON || pressed != GLUT_DOWN) return;
+    float ux = x * 800.f / windowWidth, uy = y * 600.f / windowHeight;
+    if (uy < 542 || uy >= 584) return;
+    for (int i = 0; i < 3; ++i) {
+        float left = 18.f + i * 260.f;
+        if (ux < left || ux >= left + 244 || !actionEnabled(i)) continue;
+        if (state == GameState::Defeat) {
+            if (i == 0) chooseAction(' ');
+        }
+        else chooseAction(static_cast<unsigned char>('1' + i));
+        break;
+    }
+}
+
+void drawHud() {
+    hud.begin(shaderProgram);
+    hud.rect(0, 0, 800, 106, glm::vec3(0.055f, 0.075f, 0.12f));
+    hud.text(18, 14, "MONSTER CLASH", glm::vec3(0.4f, 0.85f, 1.f));
+    hud.text(430, 14, "FLOOR " + std::to_string(floorNum) + "  KILLS " + std::to_string(kills));
+    hud.text(18, 42, "HP " + std::to_string(playerStats.hp) + "/" + std::to_string(playerStats.maxHp));
+    hud.text(280, 42, "MP " + std::to_string(playerStats.mp) + "/" + std::to_string(playerStats.maxMp));
+    hud.text(550, 42, "ATK " + std::to_string(playerStats.attack));
+    hud.rect(18, 68, 235, 12, glm::vec3(0.16f));
+    hud.rect(18, 68, 235.f * playerStats.hp / playerStats.maxHp, 12, glm::vec3(0.2f, 0.8f, 0.4f));
+    hud.rect(280, 68, 235, 12, glm::vec3(0.16f));
+    hud.rect(280, 68, 235.f * playerStats.mp / playerStats.maxMp, 12, glm::vec3(0.25f, 0.55f, 1.f));
+
+    hud.rect(0, 452, 800, 148, glm::vec3(0.055f, 0.075f, 0.12f));
+    std::string heading, message;
+    std::array<std::string, 3> labels;
+    if (state == GameState::Battle) {
+        const Fighter& enemy = enemies[currentEnemy].stats;
+        heading = enemy.name + "  HP " + std::to_string(enemy.hp) + "/" + std::to_string(enemy.maxHp);
+        message = battle.log;
+        labels = {"[1] ATTACK", "[2] SKILL - 3 MP", "[3] DEFEND"};
+        hud.text(18, 88, battle.playerTurn ? "YOUR TURN" : "ENEMY TURN", glm::vec3(1.f, 0.8f, 0.3f));
+    }
+    else if (state == GameState::Upgrade) {
+        heading = "VICTORY! CHOOSE ONE UPGRADE";
+        message = "+3 MP RESTORED. HEALTH AND MANA UPGRADES REFILL THEM.";
+        labels = {"[1] +2 ATTACK", "[2] +8 HP / HEAL", "[3] +4 MP / REFILL"};
+    }
+    else if (state == GameState::Defeat) {
+        heading = "YOU DIED - TRY ANOTHER RUN";
+        message = "PERMANENT ATTACK BONUS: +" + std::to_string(metaAttackBonus) + " THIS SESSION";
+        labels[0] = "SPACE / RESTART";
+    }
+    else {
+        heading = "EXPLORE THE ARENA";
+        message = "WASD TO MOVE. TOUCH AN ENEMY TO START A BATTLE.";
+    }
+    hud.text(18, 468, heading, glm::vec3(0.4f, 0.85f, 1.f));
+    hud.text(18, 504, message.substr(0, 63));
+    for (int i = 0; i < 3; ++i) {
+        if (labels[i].empty()) continue;
+        bool enabled = actionEnabled(i);
+        hud.rect(18.f + i * 260, 542, 244, 42,
+            enabled ? glm::vec3(0.16f, 0.32f, 0.48f) : glm::vec3(0.13f, 0.15f, 0.19f));
+        hud.text(28.f + i * 260, 556, labels[i], enabled ? glm::vec3(0.96f) : glm::vec3(0.45f));
+    }
+    hud.end();
 }
 
 void keyUp(unsigned char k, int, int) {
@@ -343,6 +419,7 @@ void display() {
 
     rootScene->update(dt);
     rootScene->render(shaderProgram, proj * view);
+    drawHud();
     glutSwapBuffers();
 }
 
@@ -373,12 +450,14 @@ int main(int argc, char** argv) {
     }
     initCube();
     initScene();
+    hud.init();
 
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutIgnoreKeyRepeat(1);
     glutKeyboardFunc(keyDown);
     glutKeyboardUpFunc(keyUp);
+    glutMouseFunc(mouseDown);
     lastTime = glutGet(GLUT_ELAPSED_TIME);
     glutTimerFunc(0, timer, 0);
 

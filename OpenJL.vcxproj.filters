@@ -41,6 +41,9 @@
     <ClInclude Include="Modules\Node.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Game\Hud.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
     <ClInclude Include="Modules\Vector3.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
