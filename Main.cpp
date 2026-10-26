@@ -15,6 +15,8 @@
 #include <cmath>
 #include <random>
 #include <string>
+#include <cctype>
+#include <stdexcept>
 
 GLuint shaderProgram = 0;
 GLuint cubeVAO = 0;
@@ -51,6 +53,8 @@ int metaAttackBonus = 0;
 std::shared_ptr<MeshNode> player, floorNode, playerHpBar;
 bool keys[256] = {};
 int lastTime = 0;
+int windowWidth = 800, windowHeight = 600;
+constexpr float arenaLimit = 9.5f;
 
 // new shaders for texture support
 const char* vertexShaderSrc =
@@ -81,6 +85,14 @@ GLuint compileShader(GLenum type, const char* source) {
     GLuint shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, NULL);
     glCompileShader(shader);
+    GLint compiled = GL_FALSE;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+    if (!compiled) {
+        char log[2048] = {};
+        glGetShaderInfoLog(shader, sizeof(log), nullptr, log);
+        glDeleteShader(shader);
+        throw std::runtime_error(std::string("Shader compilation failed: ") + log);
+    }
     return shader;
 }
 
@@ -93,6 +105,13 @@ void initShaders() {
     glLinkProgram(shaderProgram);
     glDeleteShader(vs);
     glDeleteShader(fs);
+    GLint linked = GL_FALSE;
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &linked);
+    if (!linked) {
+        char log[2048] = {};
+        glGetProgramInfoLog(shaderProgram, sizeof(log), nullptr, log);
+        throw std::runtime_error(std::string("Shader linking failed: ") + log);
+    }
 }
 
 void initCube() {
@@ -202,6 +221,7 @@ void initScene() {
 }
 
 void keyDown(unsigned char k, int, int) {
+    k = static_cast<unsigned char>(std::tolower(k));
     keys[k] = true;
     if (state == GameState::Battle) {
         if (k == '1') battle.playerAct(PlayerAction::Attack);
@@ -220,7 +240,15 @@ void keyDown(unsigned char k, int, int) {
     }
 }
 
-void keyUp(unsigned char k, int, int) { keys[k] = false; }
+void keyUp(unsigned char k, int, int) {
+    keys[static_cast<unsigned char>(std::tolower(k))] = false;
+}
+
+void reshape(int width, int height) {
+    windowWidth = std::max(width, 1);
+    windowHeight = std::max(height, 1);
+    glViewport(0, 0, windowWidth, windowHeight);
+}
 
 void setBar(std::shared_ptr<MeshNode>& bar, Vector3 base, int hp, int maxHp) {
     float r = (float)hp / maxHp;
@@ -231,11 +259,15 @@ void setBar(std::shared_ptr<MeshNode>& bar, Vector3 base, int hp, int maxHp) {
 void updateGame(float dt) {
     if (state == GameState::Explore) {
         Vector3 p = player->getPosition();
-        float speed = 4.0f * dt;
-        if (keys['w']) p.Z -= speed;
-        if (keys['s']) p.Z += speed;
-        if (keys['a']) p.X -= speed;
-        if (keys['d']) p.X += speed;
+        float dx = float(keys['d']) - float(keys['a']);
+        float dz = float(keys['s']) - float(keys['w']);
+        float length = std::sqrt(dx * dx + dz * dz);
+        if (length > 0.0f) {
+            p.X += dx / length * 4.0f * dt;
+            p.Z += dz / length * 4.0f * dt;
+        }
+        p.X = std::clamp(p.X, -arenaLimit, arenaLimit);
+        p.Z = std::clamp(p.Z, -arenaLimit, arenaLimit);
         player->setPosition(p);
 
         for (size_t i = 0; i < enemies.size(); i++) {
@@ -300,14 +332,14 @@ void display() {
     glUseProgram(shaderProgram);
 
     int now = glutGet(GLUT_ELAPSED_TIME);
-    float dt = (now - lastTime) / 1000.0f;
+    float dt = std::clamp((now - lastTime) / 1000.0f, 0.0f, 0.1f);
     lastTime = now;
 
     updateGame(dt);
 
     Vector3 p = player->getPosition();
     glm::mat4 view = glm::lookAt(glm::vec3(p.X, p.Y + 7.0f, p.Z + 9.0f), glm::vec3(p.X, p.Y, p.Z), glm::vec3(0, 1, 0));
-    glm::mat4 proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), float(windowWidth) / windowHeight, 0.1f, 100.0f);
 
     rootScene->update(dt);
     rootScene->render(shaderProgram, proj * view);
@@ -332,11 +364,18 @@ int main(int argc, char** argv) {
 
     glEnable(GL_DEPTH_TEST);
 
-    initShaders();
+    try {
+        initShaders();
+    }
+    catch (const std::exception& error) {
+        std::cerr << error.what() << std::endl;
+        return 1;
+    }
     initCube();
     initScene();
 
     glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
     glutIgnoreKeyRepeat(1);
     glutKeyboardFunc(keyDown);
     glutKeyboardUpFunc(keyUp);

@@ -26,6 +26,8 @@ public:
 
     void start(Fighter* p, Fighter* e) {
         player = p; enemy = e;
+        player->defending = false;
+        enemy->defending = false;
         playerTurn = true; finished = false; playerWon = false;
         enemyTimer = 0.f;
         log = "A wild " + e->name + " appears!";
