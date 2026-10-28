@@ -7,6 +7,9 @@ turn-based encounters. Working title: Monster Clash.
 
 - Explore a single arena with a following camera and bounded movement.
 - Encounter three randomly positioned enemies: Slime, Goblin and Golem.
+- Enemy silhouettes match their type: a squat slime, a goblin with wide ears,
+  and a broad stone golem. Models switch with each new spawn and retain combat
+  movement and hit flashes through their shared scene-graph parent.
 - Choose attack, skill (3 MP), or defense; the enemy responds after a short delay.
 - Attacks lunge toward the opponent, skills use a longer lunge, defense dips the
   character, and hits briefly flash red with a small shake. Visual offsets do
@@ -59,7 +62,7 @@ and adds no dependency.
 
 ## Next milestones
 
-1. Distinct silhouettes for each enemy type and additional arena details.
+1. Additional arena details and enemy behavior variety.
 2. Attack/hit animations and a distinct battle camera.
 3. Enemy spacing, balance and a final encounter with a clear win screen.
 4. Save meta progression between launches; prepare a demo and presentation.

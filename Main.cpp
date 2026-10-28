@@ -44,6 +44,7 @@ const EnemyType enemyTypes[] = {
 struct Enemy {
     Fighter stats;
     std::shared_ptr<MeshNode> body, hpBar;
+    std::array<std::shared_ptr<Node>, 3> models;
 };
 
 std::vector<Enemy> enemies;
@@ -198,10 +199,13 @@ void spawnEnemies() {
     float scale = 1.0f + 0.15f * (floorNum - 1);
 
     for (auto& e : enemies) {
-        const EnemyType& t = enemyTypes[pickType(rng)];
+        int typeIndex = pickType(rng);
+        const EnemyType& t = enemyTypes[typeIndex];
         int hp = (int)(t.hp * scale);
         e.stats = Fighter{ t.name, hp, hp, (int)(t.atk * scale), t.def, 0, 0 };
         e.body->color = t.color;
+        for (int model = 0; model < 3; ++model)
+            e.models[model]->setScale(model == typeIndex ? Vector3(1, 1, 1) : Vector3());
         Vector3 p;
         do { p = Vector3(pickPos(rng), 0, pickPos(rng)); } while (std::sqrt(p.X * p.X + p.Z * p.Z) < 4.0f);
         e.body->setPosition(p);
@@ -262,6 +266,47 @@ void decorateArena() {
     }
 }
 
+void buildEnemyModels(Enemy& enemy) {
+    // Reuse the same encounter/animation anchor while switching child models.
+    for (int type = 0; type < 3; ++type) {
+        auto model = std::make_shared<Node>();
+        enemy.models[type] = model;
+        enemy.body->addChild(model);
+        Vector3 color = enemyTypes[type].color;
+        float eyeY = 0.05f, eyeZ = 0.52f;
+        if (type == 0) {
+            addBlock(model, Vector3(0, -0.18f, 0), Vector3(1.25f, 0.64f, 1.05f), color);
+            addBlock(model, Vector3(0, 0.2f, -0.08f), Vector3(0.7f, 0.2f, 0.65f), color);
+        }
+        else if (type == 1) {
+            addBlock(model, Vector3(0, -0.05f, 0), Vector3(0.65f, 0.8f, 0.5f), Vector3(0.38f, 0.25f, 0.14f));
+            addBlock(model, Vector3(0, 0.62f, 0), Vector3(0.8f, 0.65f, 0.7f), color);
+            for (float side : {-1.f, 1.f}) {
+                auto ear = addBlock(model, Vector3(side * 0.55f, 0.73f, 0), Vector3(0.4f, 0.18f, 0.35f), color);
+                ear->setRotation(Vector3(0, 0, side * 25.f));
+                addBlock(model, Vector3(side * 0.48f, -0.02f, 0), Vector3(0.22f, 0.65f, 0.3f), color);
+            }
+            eyeY = 0.67f;
+            eyeZ = 0.37f;
+        }
+        else {
+            addBlock(model, Vector3(0, 0.1f, 0), Vector3(1.15f, 1.2f, 0.8f), color);
+            addBlock(model, Vector3(0, 0.91f, 0), Vector3(0.7f, 0.5f, 0.65f), color);
+            for (float side : {-1.f, 1.f}) {
+                addBlock(model, Vector3(side * 0.79f, 0.05f, 0), Vector3(0.4f, 1.f, 0.65f), color);
+                addBlock(model, Vector3(side * 0.35f, 0.78f, -0.15f), Vector3(0.23f, 0.3f, 0.4f), Vector3(0.32f, 0.35f, 0.4f));
+            }
+            eyeY = 0.95f;
+            eyeZ = 0.35f;
+        }
+        for (float x : {-0.2f, 0.2f}) {
+            addBlock(model, Vector3(x, eyeY, eyeZ), Vector3(0.2f, 0.22f, 0.04f), Vector3(0.95f, 0.95f, 0.86f));
+            addBlock(model, Vector3(x, eyeY, eyeZ + 0.03f), Vector3(0.08f, 0.12f, 0.03f), Vector3(0.08f, 0.1f, 0.15f));
+        }
+        addBlock(model, Vector3(0, eyeY - 0.22f, eyeZ), Vector3(0.25f, 0.06f, 0.04f), Vector3(0.12f, 0.08f, 0.16f));
+    }
+}
+
 void initScene() {
     rootScene = std::make_shared<Node>();
 
@@ -296,12 +341,8 @@ void initScene() {
 
     for (int i = 0; i < 3; i++) {
         Enemy e;
-        e.body = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
-        for (float x : {-0.22f, 0.22f}) {
-            addBlock(e.body, Vector3(x, 0.15f, 0.51f), Vector3(0.24f, 0.3f, 0.04f), Vector3(0.95f, 0.95f, 0.86f));
-            addBlock(e.body, Vector3(x, 0.13f, 0.54f), Vector3(0.1f, 0.16f, 0.03f), Vector3(0.08f, 0.1f, 0.15f));
-        }
-        addBlock(e.body, Vector3(0, -0.22f, 0.51f), Vector3(0.3f, 0.08f, 0.04f), Vector3(0.12f, 0.08f, 0.16f));
+        e.body = std::make_shared<MeshNode>(cubeVAO, 0);
+        buildEnemyModels(e);
         e.hpBar = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
         e.hpBar->color = Vector3(0.9f, 0.1f, 0.1f);
         rootScene->addChild(e.body);
