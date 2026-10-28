@@ -95,6 +95,7 @@ public:
         const glm::mat4 projection = glm::ortho(0.f, 800.f, 600.f, 0.f, -1.f, 1.f);
         glUniformMatrix4fv(glGetUniformLocation(program, "u_MVP"), 1, GL_FALSE, &projection[0][0]);
         glUniform1i(glGetUniformLocation(program, "u_UseTex"), GL_FALSE);
+        glUniform1i(glGetUniformLocation(program, "u_Lighting"), GL_FALSE);
     }
 
     void rect(float x, float y, float w, float h, glm::vec3 color) {

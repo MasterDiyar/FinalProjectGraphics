@@ -7,6 +7,7 @@ MeshNode::MeshNode(unsigned int vao, int indexCount) : vao(vao), indexCount(inde
 void MeshNode::render(unsigned int shaderProgram, const glm::mat4& viewProjMatrix) {
     glm::mat4 world = getWorldTransform();
     glm::mat4 mvp = viewProjMatrix * world;
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "u_Model"), 1, GL_FALSE, &world[0][0]);
 
     int mvpLoc = glGetUniformLocation(shaderProgram, "u_MVP");
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, &mvp[0][0]);

@@ -64,22 +64,31 @@ const char* vertexShaderSrc =
 "layout (location = 0) in vec3 aPos;\n"
 "layout (location = 2) in vec2 aUV;\n"
 "uniform mat4 u_MVP;\n"
+"uniform mat4 u_Model;\n"
+"out vec3 vWorld;\n"
 "out vec2 vUV;\n"
 "void main()\n"
 "{\n"
 "   vUV = aUV;\n"
+"   vWorld = (u_Model * vec4(aPos, 1.0)).xyz;\n"
 "   gl_Position = u_MVP * vec4(aPos, 1.0);\n"
 "}\n";
 
 const char* fragmentShaderSrc =
 "#version 330 core\n"
 "in vec2 vUV;\n"
+"in vec3 vWorld;\n"
 "out vec4 FragColor;\n"
 "uniform vec3 u_Color;\n"
 "uniform sampler2D u_Tex;\n"
 "uniform bool u_UseTex;\n"
+"uniform bool u_Lighting;\n"
 "void main() {\n"
 "   vec3 c = u_UseTex ? texture(u_Tex, vUV).rgb * u_Color : u_Color;\n"
+"   if (u_Lighting) {\n"
+"       vec3 n = normalize(cross(dFdx(vWorld), dFdy(vWorld)));\n"
+"       c *= 0.45 + 0.55 * max(dot(n, normalize(vec3(-0.4, 1.0, 0.6))), 0.0);\n"
+"   }\n"
 "   FragColor = vec4(c, 1.0);\n"
 "}\n";
 
@@ -184,6 +193,37 @@ void finishUpgrade() {
     state = GameState::Explore;
 }
 
+std::shared_ptr<MeshNode> addBlock(const std::shared_ptr<Node>& parent,
+    Vector3 position, Vector3 scale, Vector3 color) {
+    auto block = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
+    block->setPosition(position);
+    block->setScale(scale);
+    block->color = color;
+    parent->addChild(block);
+    return block;
+}
+
+void decorateArena() {
+    for (int x = 0; x < 10; ++x)
+        for (int z = 0; z < 10; ++z) {
+            bool path = x == 4 || x == 5 || z == 4 || z == 5;
+            float shade = (x + z) % 2 ? 0.03f : 0.f;
+            addBlock(rootScene, Vector3(-9.f + x * 2, -0.49f, -9.f + z * 2),
+                Vector3(1.96f, 0.02f, 1.96f), path
+                ? Vector3(0.55f + shade, 0.53f + shade, 0.43f + shade)
+                : Vector3(0.25f + shade, 0.53f + shade, 0.30f + shade));
+        }
+    const Vector3 stone(0.36f, 0.42f, 0.49f);
+    for (int side : {-1, 1}) {
+        addBlock(rootScene, Vector3(side * 10.3f, -0.1f, 0), Vector3(0.6f, 0.8f, 21.2f), stone);
+        addBlock(rootScene, Vector3(0, -0.1f, side * 10.3f), Vector3(20, 0.8f, 0.6f), stone);
+        for (int corner : {-1, 1}) {
+            addBlock(rootScene, Vector3(side * 10.3f, 0.5f, corner * 10.3f), Vector3(1, 2, 1), stone);
+            addBlock(rootScene, Vector3(side * 10.3f, 1.6f, corner * 10.3f), Vector3(1.2f, 0.2f, 1.2f), Vector3(0.7f, 0.65f, 0.4f));
+        }
+    }
+}
+
 void initScene() {
     rootScene = std::make_shared<Node>();
 
@@ -192,6 +232,7 @@ void initScene() {
     floorNode->setPosition(Vector3(0, -0.6f, 0));
     floorNode->color = Vector3(0.3f, 0.7f, 0.3f);
     rootScene->addChild(floorNode);
+    decorateArena();
 
 	// use loadOBJ to load the hero model and create a MeshNode for the player
     Model heroModel = loadOBJ("assets/hero.obj");
@@ -203,6 +244,11 @@ void initScene() {
     else {
         player = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
         player->color = Vector3(0.2f, 0.5f, 1.0f);
+        addBlock(player, Vector3(0, 0.83f, 0), Vector3(0.65f, 0.65f, 0.65f), Vector3(1.f, 0.79f, 0.53f));
+        addBlock(player, Vector3(-0.65f, 0, 0), Vector3(0.25f, 0.8f, 0.4f), player->color);
+        addBlock(player, Vector3(0.65f, 0, 0), Vector3(0.25f, 0.8f, 0.4f), player->color);
+        for (float x : {-0.15f, 0.15f})
+            addBlock(player, Vector3(x, 0.88f, 0.34f), Vector3(0.09f, 0.1f, 0.03f), Vector3(0.08f, 0.1f, 0.15f));
     }
     rootScene->addChild(player);
 
@@ -213,6 +259,11 @@ void initScene() {
     for (int i = 0; i < 3; i++) {
         Enemy e;
         e.body = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
+        for (float x : {-0.22f, 0.22f}) {
+            addBlock(e.body, Vector3(x, 0.15f, 0.51f), Vector3(0.24f, 0.3f, 0.04f), Vector3(0.95f, 0.95f, 0.86f));
+            addBlock(e.body, Vector3(x, 0.13f, 0.54f), Vector3(0.1f, 0.16f, 0.03f), Vector3(0.08f, 0.1f, 0.15f));
+        }
+        addBlock(e.body, Vector3(0, -0.22f, 0.51f), Vector3(0.3f, 0.08f, 0.04f), Vector3(0.12f, 0.08f, 0.16f));
         e.hpBar = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
         e.hpBar->color = Vector3(0.9f, 0.1f, 0.1f);
         rootScene->addChild(e.body);
@@ -329,7 +380,7 @@ void reshape(int width, int height) {
 void setBar(std::shared_ptr<MeshNode>& bar, Vector3 base, int hp, int maxHp) {
     float r = (float)hp / maxHp;
     bar->setScale(Vector3(std::max(r, 0.001f) * 1.5f, 0.15f, 0.15f));
-    bar->setPosition(Vector3(base.X, base.Y + 1.0f, base.Z));
+    bar->setPosition(Vector3(base.X, base.Y + 1.6f, base.Z));
 }
 
 void updateGame(float dt) {
@@ -418,6 +469,7 @@ void display() {
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), float(windowWidth) / windowHeight, 0.1f, 100.0f);
 
     rootScene->update(dt);
+    glUniform1i(glGetUniformLocation(shaderProgram, "u_Lighting"), GL_TRUE);
     rootScene->render(shaderProgram, proj * view);
     drawHud();
     glutSwapBuffers();

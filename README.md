@@ -11,8 +11,11 @@ turn-based encounters. Working title: Monster Clash.
 - Win a battle to choose an attack, health, or mana upgrade.
 - Clear all enemies to advance to a harder floor.
 - Restart after defeat with a permanent +1 attack bonus for this session.
-- OBJ loading and texture support; the player falls back to a blue cube when
-  `assets/hero.obj` is absent. Art assets are not included yet.
+- A tiled arena with crossing paths, boundary walls and corner pillars.
+- A blocky hero and monster faces built from scene-graph children, with simple
+  directional diffuse lighting. No downloaded art assets are required.
+- OBJ loading and texture support; the built-in block hero is used when
+  `assets/hero.obj` is absent.
 
 ## Build and run (Windows)
 
@@ -52,7 +55,7 @@ and adds no dependency.
 
 ## Next milestones
 
-1. Blocky character models, arena decoration, normals and simple lighting.
+1. Distinct silhouettes for each enemy type and additional arena details.
 2. Attack/hit animations and a distinct battle camera.
 3. Enemy spacing, balance and a final encounter with a clear win screen.
 4. Save meta progression between launches; prepare a demo and presentation.
@@ -75,4 +78,8 @@ partial progression. These are inspirations; original art and naming can be
 chosen by the team.
 
 [Original concept discussion](https://claude.ai/share/de4ce892-9249-4411-8af0-f38e7303b0fb)
+
+## Friday prototype demonstration
+
+See [DEMO.md](DEMO.md) for a short presentation sequence and pre-demo checks.
 
