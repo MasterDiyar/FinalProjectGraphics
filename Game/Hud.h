@@ -96,6 +96,7 @@ public:
         glUniformMatrix4fv(glGetUniformLocation(program, "u_MVP"), 1, GL_FALSE, &projection[0][0]);
         glUniform1i(glGetUniformLocation(program, "u_UseTex"), GL_FALSE);
         glUniform1i(glGetUniformLocation(program, "u_Lighting"), GL_FALSE);
+        glUniform1f(glGetUniformLocation(program, "u_HitFlash"), 0.f);
     }
 
     void rect(float x, float y, float w, float h, glm::vec3 color) {

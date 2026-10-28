@@ -8,6 +8,10 @@ turn-based encounters. Working title: Monster Clash.
 - Explore a single arena with a following camera and bounded movement.
 - Encounter three randomly positioned enemies: Slime, Goblin and Golem.
 - Choose attack, skill (3 MP), or defense; the enemy responds after a short delay.
+- Attacks lunge toward the opponent, skills use a longer lunge, defense dips the
+  character, and hits briefly flash red with a small shake. Visual offsets do
+  not change encounter positions. Actions wait for feedback to finish, including
+  the final blow before an upgrade or defeat screen.
 - Win a battle to choose an attack, health, or mana upgrade.
 - Clear all enemies to advance to a harder floor.
 - Restart after defeat with a permanent +1 attack bonus for this session.

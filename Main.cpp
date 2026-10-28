@@ -58,6 +58,40 @@ int lastTime = 0;
 int windowWidth = 800, windowHeight = 600;
 constexpr float arenaLimit = 9.5f;
 
+struct CombatMotion {
+    std::shared_ptr<MeshNode> actor;
+    Vector3 direction;
+    float attackTime = 0.f, hitTime = 0.f, guardTime = 0.f;
+    float reach = 0.4f;
+
+    bool active() const { return attackTime > 0.f || hitTime > 0.f || guardTime > 0.f; }
+    void strike(const std::shared_ptr<MeshNode>& source, const std::shared_ptr<MeshNode>& target, bool skill = false) {
+        actor = source;
+        Vector3 a = source->getPosition(), b = target->getPosition();
+        float dx = b.X - a.X, dz = b.Z - a.Z;
+        float length = std::sqrt(dx * dx + dz * dz);
+        direction = length > 0.001f ? Vector3(dx / length, 0, dz / length) : Vector3(0, 0, -1);
+        reach = skill ? 0.65f : 0.4f;
+        attackTime = 0.36f;
+    }
+    void update(float dt) {
+        if (!actor) return;
+        attackTime = std::max(0.f, attackTime - dt);
+        hitTime = std::max(0.f, hitTime - dt);
+        guardTime = std::max(0.f, guardTime - dt);
+        float lunge = std::sin(attackTime / 0.36f * 3.14159265f) * reach;
+        float shake = hitTime > 0.f ? std::sin(hitTime * 75.f) * 0.07f : 0.f;
+        actor->setVisualOffset(Vector3(direction.X * lunge + shake,
+            -std::sin(guardTime / 0.36f * 3.14159265f) * 0.15f, direction.Z * lunge));
+        actor->setHitFlash(hitTime / 0.3f);
+    }
+    void clear() {
+        if (actor) { actor->setVisualOffset(Vector3()); actor->setHitFlash(0.f); }
+        *this = CombatMotion{};
+    }
+};
+CombatMotion playerMotion, enemyMotion;
+
 // new shaders for texture support
 const char* vertexShaderSrc =
 "#version 330 core\n"
@@ -83,8 +117,10 @@ const char* fragmentShaderSrc =
 "uniform sampler2D u_Tex;\n"
 "uniform bool u_UseTex;\n"
 "uniform bool u_Lighting;\n"
+"uniform float u_HitFlash;\n"
 "void main() {\n"
 "   vec3 c = u_UseTex ? texture(u_Tex, vUV).rgb * u_Color : u_Color;\n"
+"   c = mix(c, vec3(1.0, 0.25, 0.2), clamp(u_HitFlash, 0.0, 1.0));\n"
 "   if (u_Lighting) {\n"
 "       vec3 n = normalize(cross(dFdx(vWorld), dFdy(vWorld)));\n"
 "       c *= 0.45 + 0.55 * max(dot(n, normalize(vec3(-0.4, 1.0, 0.6))), 0.0);\n"
@@ -173,6 +209,8 @@ void spawnEnemies() {
 }
 
 void resetRun() {
+    playerMotion.clear();
+    enemyMotion.clear();
     floorNum = 1;
     kills = 0;
     playerStats = Fighter{ "Hero", 40, 40, 9 + metaAttackBonus, 2, 10, 10 };
@@ -275,9 +313,22 @@ void initScene() {
 
 void chooseAction(unsigned char k) {
     if (state == GameState::Battle) {
+        if (!battle.playerTurn || battle.finished || playerMotion.active() || enemyMotion.active()) return;
+        if (k < '1' || k > '3') return;
+        auto target = enemies[currentEnemy].body;
+        int hpBefore = enemies[currentEnemy].stats.hp;
         if (k == '1') battle.playerAct(PlayerAction::Attack);
         if (k == '2') battle.playerAct(PlayerAction::Skill);
-        if (k == '3') battle.playerAct(PlayerAction::Defend);
+        if (k == '3') {
+            battle.playerAct(PlayerAction::Defend);
+            playerMotion.actor = player;
+            playerMotion.guardTime = 0.36f;
+        }
+        if (enemies[currentEnemy].stats.hp < hpBefore) {
+            playerMotion.strike(player, target, k == '2');
+            enemyMotion.actor = target;
+            enemyMotion.hitTime = 0.3f;
+        }
     }
     else if (state == GameState::Upgrade) {
         if (k == '1')      playerStats.attack += 2;
@@ -300,6 +351,7 @@ void keyDown(unsigned char k, int, int) {
 bool actionEnabled(int index) {
     if (state == GameState::Upgrade || state == GameState::Defeat) return true;
     return state == GameState::Battle && battle.playerTurn && !battle.finished
+        && !playerMotion.active() && !enemyMotion.active()
         && (index != 1 || playerStats.mp >= 3);
 }
 
@@ -339,7 +391,9 @@ void drawHud() {
         heading = enemy.name + "  HP " + std::to_string(enemy.hp) + "/" + std::to_string(enemy.maxHp);
         message = battle.log;
         labels = {"[1] ATTACK", "[2] SKILL - 3 MP", "[3] DEFEND"};
-        hud.text(18, 88, battle.playerTurn ? "YOUR TURN" : "ENEMY TURN", glm::vec3(1.f, 0.8f, 0.3f));
+        std::string turn = battle.playerTurn ? "YOUR TURN" : "ENEMY TURN";
+        if (playerMotion.active() || enemyMotion.active()) turn = "RESOLVING ACTION";
+        hud.text(18, 88, turn, glm::vec3(1.f, 0.8f, 0.3f));
     }
     else if (state == GameState::Upgrade) {
         heading = "VICTORY! CHOOSE ONE UPGRADE";
@@ -384,6 +438,8 @@ void setBar(std::shared_ptr<MeshNode>& bar, Vector3 base, int hp, int maxHp) {
 }
 
 void updateGame(float dt) {
+    playerMotion.update(dt);
+    enemyMotion.update(dt);
     if (state == GameState::Explore) {
         Vector3 p = player->getPosition();
         float dx = float(keys['d']) - float(keys['a']);
@@ -403,6 +459,8 @@ void updateGame(float dt) {
             float dx = p.X - e.X, dz = p.Z - e.Z;
             if (std::sqrt(dx * dx + dz * dz) < 1.3f) {
                 currentEnemy = (int)i;
+                playerMotion.clear();
+                enemyMotion.clear();
                 battle.start(&playerStats, &enemies[i].stats);
                 state = GameState::Battle;
                 break;
@@ -410,8 +468,14 @@ void updateGame(float dt) {
         }
     }
     else if (state == GameState::Battle) {
+        int hpBefore = playerStats.hp;
         battle.update(dt);
-        if (battle.finished) {
+        if (playerStats.hp < hpBefore) {
+            enemyMotion.strike(enemies[currentEnemy].body, player);
+            playerMotion.actor = player;
+            playerMotion.hitTime = 0.3f;
+        }
+        if (battle.finished && !playerMotion.active() && !enemyMotion.active()) {
             if (battle.playerWon) {
                 kills++;
                 playerStats.mp = std::min(playerStats.maxMp, playerStats.mp + 3);
@@ -427,7 +491,7 @@ void updateGame(float dt) {
     setBar(playerHpBar, player->getPosition(), playerStats.hp, playerStats.maxHp);
 
     for (auto& e : enemies) {
-        if (e.stats.alive()) {
+        if (e.stats.alive() || (e.body == enemyMotion.actor && (enemyMotion.active() || playerMotion.active()))) {
             e.body->setScale(Vector3(1, 1, 1));
             setBar(e.hpBar, e.body->getPosition(), e.stats.hp, e.stats.maxHp);
         }

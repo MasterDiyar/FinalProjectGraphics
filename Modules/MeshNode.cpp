@@ -8,6 +8,7 @@ void MeshNode::render(unsigned int shaderProgram, const glm::mat4& viewProjMatri
     glm::mat4 world = getWorldTransform();
     glm::mat4 mvp = viewProjMatrix * world;
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "u_Model"), 1, GL_FALSE, &world[0][0]);
+    glUniform1f(glGetUniformLocation(shaderProgram, "u_HitFlash"), getHitFlash());
 
     int mvpLoc = glGetUniformLocation(shaderProgram, "u_MVP");
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, &mvp[0][0]);

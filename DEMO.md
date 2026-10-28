@@ -7,6 +7,9 @@
 - Resize the window and confirm that text and buttons remain usable.
 - Play one battle through to an upgrade; check the next encounter.
 - Try a skill below 3 MP and confirm it does not spend a turn.
+- Check attack/skill lunges, defense motion and red hit flashes on both actors.
+- Check that a final hit animates before the upgrade/defeat screen and that
+  actors return to their original positions after feedback.
 - Check defeat and Space/click restart before the live demo.
 
 ## A short demo (about 3 minutes)
