@@ -56,6 +56,7 @@ int metaAttackBonus = 0;
 
 std::shared_ptr<MeshNode> player, floorNode, playerHpBar;
 bool keys[256] = {};
+bool paused = false;
 int lastTime = 0;
 int windowWidth = 800, windowHeight = 600;
 constexpr float arenaLimit = 9.5f;
@@ -354,6 +355,7 @@ void initScene() {
 }
 
 void chooseAction(unsigned char k) {
+    if (paused) return;
     if (state == GameState::Battle) {
         if (!battle.playerTurn || battle.finished || playerMotion.active() || enemyMotion.active()) return;
         if (k < '1' || k > '3') return;
@@ -386,11 +388,18 @@ void chooseAction(unsigned char k) {
 
 void keyDown(unsigned char k, int, int) {
     k = static_cast<unsigned char>(std::tolower(k));
+    if (k == 'p') {
+        paused = !paused;
+        std::fill(std::begin(keys), std::end(keys), false);
+        return;
+    }
+    if (paused) return;
     keys[k] = true;
     chooseAction(k);
 }
 
 bool actionEnabled(int index) {
+    if (paused) return false;
     if (state == GameState::Upgrade || state == GameState::Defeat) return true;
     return state == GameState::Battle && battle.playerTurn && !battle.finished
         && !playerMotion.active() && !enemyMotion.active()
@@ -420,6 +429,7 @@ void drawHud() {
     hud.text(18, 42, "HP " + std::to_string(playerStats.hp) + "/" + std::to_string(playerStats.maxHp));
     hud.text(280, 42, "MP " + std::to_string(playerStats.mp) + "/" + std::to_string(playerStats.maxMp));
     hud.text(550, 42, "ATK " + std::to_string(playerStats.attack));
+    hud.text(550, 88, "P - PAUSE", glm::vec3(0.65f, 0.75f, 0.85f));
     hud.rect(18, 68, 235, 12, glm::vec3(0.16f));
     hud.rect(18, 68, 235.f * playerStats.hp / playerStats.maxHp, 12, glm::vec3(0.2f, 0.8f, 0.4f));
     hud.rect(280, 68, 235, 12, glm::vec3(0.16f));
@@ -460,6 +470,12 @@ void drawHud() {
             enabled ? glm::vec3(0.16f, 0.32f, 0.48f) : glm::vec3(0.13f, 0.15f, 0.19f));
         hud.text(28.f + i * 260, 556, labels[i], enabled ? glm::vec3(0.96f) : glm::vec3(0.45f));
     }
+    if (paused) {
+        hud.rect(164, 214, 472, 126, glm::vec3(0.035f, 0.05f, 0.09f));
+        hud.text(364, 238, "PAUSED", glm::vec3(1.f, 0.8f, 0.3f));
+        hud.text(226, 276, "PRESS P TO CONTINUE");
+        hud.text(226, 306, "YOUR RUN IS ON HOLD", glm::vec3(0.65f, 0.75f, 0.85f));
+    }
     hud.end();
 }
 
@@ -480,6 +496,7 @@ void setBar(std::shared_ptr<MeshNode>& bar, Vector3 base, int hp, int maxHp) {
 }
 
 void updateGame(float dt) {
+    if (paused) return;
     playerMotion.update(dt);
     enemyMotion.update(dt);
     if (state == GameState::Explore) {
@@ -574,7 +591,7 @@ void display() {
     glm::mat4 view = glm::lookAt(glm::vec3(p.X, p.Y + 7.0f, p.Z + 9.0f), glm::vec3(p.X, p.Y, p.Z), glm::vec3(0, 1, 0));
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), float(windowWidth) / windowHeight, 0.1f, 100.0f);
 
-    rootScene->update(dt);
+    rootScene->update(paused ? 0.f : dt);
     glUniform1i(glGetUniformLocation(shaderProgram, "u_Lighting"), GL_TRUE);
     rootScene->render(shaderProgram, proj * view);
     drawHud();

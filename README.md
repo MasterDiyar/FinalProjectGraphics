@@ -54,6 +54,11 @@ not used by the current window/input implementation. No engine is required.
 | Battle | 1 attack, 2 skill, 3 defend |
 | Upgrade | 1 +2 attack, 2 +8 max HP and heal, 3 +4 max MP and refill |
 | Defeat | Space to restart |
+| Any state | P to pause/resume |
+
+Pause freezes movement, combat timers and feedback animations. Actions and
+upgrade choices are disabled until resumed. Movement keys are cleared when
+toggling pause so a previously held direction does not remain active.
 
 The on-screen HUD shows HP/MP bars, floor, kills, attack, current turn and battle
 messages. Click an action button or use its keyboard shortcut. Battle buttons

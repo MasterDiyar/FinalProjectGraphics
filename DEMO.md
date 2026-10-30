@@ -5,6 +5,8 @@
 - Build Debug x64; run from the repository root.
 - Check WASD, mouse clicks and number keys on the presentation computer.
 - Resize the window and confirm that text and buttons remain usable.
+- Press P during exploration and during an enemy turn: movement, attacks and
+  animations should freeze; P resumes without spending extra turns.
 - Play one battle through to an upgrade; check the next encounter.
 - Try a skill below 3 MP and confirm it does not spend a turn.
 - Check attack/skill lunges, defense motion and red hit flashes on both actors.
