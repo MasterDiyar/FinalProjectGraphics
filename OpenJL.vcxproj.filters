@@ -44,6 +44,9 @@
     <ClInclude Include="Game\Hud.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Game\SpawnLayout.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
     <ClInclude Include="Modules\Vector3.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>

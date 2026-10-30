@@ -159,6 +159,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game\Hud.h" />
+    <ClInclude Include="Game\SpawnLayout.h" />
     <ClInclude Include="Modules\MeshNode.h" />
     <ClInclude Include="Modules\ModelLoader.h" />
     <ClInclude Include="Modules\Node.h" />

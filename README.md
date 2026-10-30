@@ -7,6 +7,8 @@ turn-based encounters. Working title: Monster Clash.
 
 - Explore a single arena with a following camera and bounded movement.
 - Encounter three randomly positioned enemies: Slime, Goblin and Golem.
+- Spawns use shuffled zones with random offsets: at least 4.5 units between
+  enemies, a safe central starting area, and no overlapping encounter zones.
 - Enemy silhouettes match their type: a squat slime, a goblin with wide ears,
   and a broad stone golem. Models switch with each new spawn and retain combat
   movement and hit flashes through their shared scene-graph parent.
@@ -59,6 +61,18 @@ dim during the enemy turn; the skill button also dims below 3 MP. Upgrade and
 restart buttons are clickable too. The HUD and mouse coordinates scale together
 when the window is resized. Its small built-in bitmap font uses OpenGL triangles
 and adds no dependency.
+
+## Spawn layout checks
+
+Spawn layout regression check (Visual Studio Developer Command Prompt):
+
+```bat
+cl /nologo /EHsc /std:c++20 Tests\SpawnLayoutTests.cpp /Fo:x64\SpawnLayoutTests.obj /Fe:x64\SpawnLayoutTests.exe
+x64\SpawnLayoutTests.exe
+```
+
+The check covers arena bounds, center clearance and pairwise spacing over
+10,000 random seeds. Build the game first so the `x64` directory exists.
 
 ## Next milestones
 

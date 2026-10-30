@@ -13,6 +13,7 @@
 #include <memory>
 #include "Game/Battle.h"
 #include "Game/Hud.h"
+#include "Game/SpawnLayout.h"
 #include <cmath>
 #include <random>
 #include <string>
@@ -195,7 +196,8 @@ void initCube() {
 void spawnEnemies() {
     static std::mt19937 rng{ std::random_device{}() };
     std::uniform_int_distribution<int> pickType(0, 2);
-    std::uniform_real_distribution<float> pickPos(-8.f, 8.f);
+    const auto spawnPoints = makeSpawnLayout(rng);
+    size_t spawnIndex = 0;
     float scale = 1.0f + 0.15f * (floorNum - 1);
 
     for (auto& e : enemies) {
@@ -206,9 +208,8 @@ void spawnEnemies() {
         e.body->color = t.color;
         for (int model = 0; model < 3; ++model)
             e.models[model]->setScale(model == typeIndex ? Vector3(1, 1, 1) : Vector3());
-        Vector3 p;
-        do { p = Vector3(pickPos(rng), 0, pickPos(rng)); } while (std::sqrt(p.X * p.X + p.Z * p.Z) < 4.0f);
-        e.body->setPosition(p);
+        const auto& p = spawnPoints.at(spawnIndex++);
+        e.body->setPosition(Vector3(p.x, 0, p.z));
     }
 }
 
