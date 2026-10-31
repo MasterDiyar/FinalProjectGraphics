@@ -60,6 +60,8 @@ bool paused = false;
 int lastTime = 0;
 int windowWidth = 800, windowHeight = 600;
 constexpr float arenaLimit = 9.5f;
+glm::vec3 cameraEye(0.f, 7.f, 9.f);
+glm::vec3 cameraTarget(0.f);
 
 struct CombatMotion {
     std::shared_ptr<MeshNode> actor;
@@ -576,6 +578,32 @@ void updateGame(float dt) {
     glutSetWindowTitle(t.c_str());
 }
 
+glm::mat4 updateCamera(float dt) {
+    Vector3 position = player->getPosition();
+    glm::vec3 hero(position.X, position.Y, position.Z);
+    glm::vec3 target = hero;
+    glm::vec3 eye = hero + glm::vec3(0, 7, 9);
+    if (state == GameState::Battle && currentEnemy >= 0) {
+        Vector3 enemyPosition = enemies[currentEnemy].body->getPosition();
+        glm::vec3 enemy(enemyPosition.X, enemyPosition.Y, enemyPosition.Z);
+        glm::vec3 separation = enemy - hero;
+        separation.y = 0.f;
+        float distance = glm::length(separation);
+        glm::vec3 side = distance > 0.001f
+            ? glm::vec3(-separation.z, 0, separation.x) / distance
+            : glm::vec3(1, 0, 0);
+        // Keep the side camera on the usual viewing side of the arena.
+        if (side.z < 0.f) side = -side;
+        target = (hero + enemy) * 0.5f + glm::vec3(0, 0.4f, 0);
+        eye = target + side * 5.5f + glm::vec3(0, 4.5f, 0);
+    }
+    // Exponential smoothing keeps the transition independent of frame rate.
+    float blend = paused ? 0.f : 1.f - std::exp(-6.f * dt);
+    cameraEye = glm::mix(cameraEye, eye, blend);
+    cameraTarget = glm::mix(cameraTarget, target, blend);
+    return glm::lookAt(cameraEye, cameraTarget, glm::vec3(0, 1, 0));
+}
+
 void display() {
     glClearColor(0.5f, 0.75f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -587,8 +615,7 @@ void display() {
 
     updateGame(dt);
 
-    Vector3 p = player->getPosition();
-    glm::mat4 view = glm::lookAt(glm::vec3(p.X, p.Y + 7.0f, p.Z + 9.0f), glm::vec3(p.X, p.Y, p.Z), glm::vec3(0, 1, 0));
+    glm::mat4 view = updateCamera(dt);
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), float(windowWidth) / windowHeight, 0.1f, 100.0f);
 
     rootScene->update(paused ? 0.f : dt);

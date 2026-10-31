@@ -5,6 +5,8 @@
 - Build Debug x64; run from the repository root.
 - Check WASD, mouse clicks and number keys on the presentation computer.
 - Resize the window and confirm that text and buttons remain usable.
+- Enter an encounter from different directions: the camera should frame both
+  fighters, freeze on pause, and smoothly return to exploration after combat.
 - Press P during exploration and during an enemy turn: movement, attacks and
   animations should freeze; P resumes without spending extra turns.
 - Play one battle through to an upgrade; check the next encounter.
@@ -25,7 +27,7 @@
    responds after the player chooses an action.
 5. Win and choose an upgrade. Explain that clearing the arena starts a harder
    floor, while defeat restarts the run with a session-only attack bonus.
-6. State the remaining work: enemy variety, animation, balance, a final
+6. State the remaining work: enemy behavior variety, animation polish, balance, a final
    encounter and saving progression between launches.
 
 ## Technical points for questions

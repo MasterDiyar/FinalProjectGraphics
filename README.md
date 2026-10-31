@@ -6,6 +6,8 @@ turn-based encounters. Working title: Monster Clash.
 ## Current prototype
 
 - Explore a single arena with a following camera and bounded movement.
+- Encounters smoothly switch to a side camera centered between both fighters;
+  exploration framing returns after combat. Pause also freezes camera motion.
 - Encounter three randomly positioned enemies: Slime, Goblin and Golem.
 - Spawns use shuffled zones with random offsets: at least 4.5 units between
   enemies, a safe central starting area, and no overlapping encounter zones.
@@ -82,8 +84,8 @@ The check covers arena bounds, center clearance and pairwise spacing over
 ## Next milestones
 
 1. Additional arena details and enemy behavior variety.
-2. Attack/hit animations and a distinct battle camera.
-3. Enemy spacing, balance and a final encounter with a clear win screen.
+2. Further combat animation polish.
+3. Balance and a final encounter with a clear win screen.
 4. Save meta progression between launches; prepare a demo and presentation.
 
 Suggested split for three teammates (assign names together):
