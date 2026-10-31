@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -71,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\diyar\Documents\OpenJL\game\OpenJL\Libraries\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\diyar\Documents\OpenJL\game\OpenJL\Libraries\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)Libraries\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)Libraries\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -115,12 +115,13 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\diyar\Documents\OpenJL\game\FinalProjectGraphics\Libraries\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Libraries\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)Libraries\lib</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -135,10 +136,13 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)Libraries\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(ProjectDir)Libraries\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;freeglut.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -148,21 +152,25 @@
     <ClCompile Include="glad.c" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Modules\MeshNode.cpp" />
+    <ClCompile Include="Modules\ModelLoader.cpp" />
     <ClCompile Include="Modules\Node.cpp" />
+    <ClCompile Include="Modules\Texture.cpp" />
     <ClCompile Include="Modules\Vector3.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\Downloads\freeglut_cmake\bin\Debug\freeglutd.pdb" />
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="..\..\..\..\Downloads\freeglut_cmake\lib\Debug\freeglutd.lib" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="Game\Hud.h" />
+    <ClInclude Include="Game\SpawnLayout.h" />
     <ClInclude Include="Modules\MeshNode.h" />
+    <ClInclude Include="Modules\ModelLoader.h" />
     <ClInclude Include="Modules\Node.h" />
+    <ClInclude Include="Modules\Texture.h" />
     <ClInclude Include="Modules\Vector3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="CopyDebugFreeGlutRuntime" AfterTargets="Build" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <!-- The bundled import library requests freeglut.dll. -->
+    <Copy SourceFiles="$(ProjectDir)freeglutd.dll" DestinationFiles="$(OutDir)freeglut.dll" SkipUnchangedFiles="true" />
+  </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
