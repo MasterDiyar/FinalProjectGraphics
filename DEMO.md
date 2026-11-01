@@ -23,7 +23,8 @@
 2. Walk around the arena. Point out the following camera, tiled paths,
    boundary walls, hero model and health/mana HUD.
 3. Touch a monster. Show the enemy HP, turn indicator and combat message.
-4. Attack, defend, then use a skill. Explain that skills cost 3 MP and the enemy
+4. Attack, defend, then use a skill. Explain that defense restores up to 2 MP,
+   skills cost 3 MP, and the enemy
    responds after the player chooses an action.
 5. Win and choose an upgrade. Explain that clearing the arena starts a harder
    floor, while defeat restarts the run with a session-only attack bonus.

@@ -444,7 +444,7 @@ void drawHud() {
         const Fighter& enemy = enemies[currentEnemy].stats;
         heading = enemy.name + "  HP " + std::to_string(enemy.hp) + "/" + std::to_string(enemy.maxHp);
         message = battle.log;
-        labels = {"[1] ATTACK", "[2] SKILL - 3 MP", "[3] DEFEND"};
+        labels = {"[1] ATTACK", "[2] SKILL - 3 MP", "[3] DEFEND +2 MP"};
         std::string turn = battle.playerTurn ? "YOUR TURN" : "ENEMY TURN";
         if (playerMotion.active() || enemyMotion.active()) turn = "RESOLVING ACTION";
         hud.text(18, 88, turn, glm::vec3(1.f, 0.8f, 0.3f));

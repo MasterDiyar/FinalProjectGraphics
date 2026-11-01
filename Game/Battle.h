@@ -36,6 +36,10 @@ public:
     // called when the player chooses an action 1/2/3
     void playerAct(PlayerAction a) {
         if (!playerTurn || finished) return;
+        if (a == PlayerAction::Skill && player->mp < 3) {
+            log = "Not enough MP!";
+            return;
+        }
         player->defending = false;
 
         if (a == PlayerAction::Attack) {
@@ -43,14 +47,15 @@ public:
             enemy->hp -= d;
             log = "You hit for " + std::to_string(d);
         } else if (a == PlayerAction::Skill) {
-            if (player->mp < 3) { log = "Not enough MP!"; return; }
             player->mp -= 3;
             int d = calcDamage(player->attack * 2, enemy->defense, enemy->defending);
             enemy->hp -= d;
             log = "Skill hits for " + std::to_string(d);
         } else {
             player->defending = true;
-            log = "You brace for impact";
+            int restored = std::min(2, player->maxMp - player->mp);
+            player->mp += restored;
+            log = "You brace for impact - +" + std::to_string(restored) + " MP";
         }
 
         if (!enemy->alive()) { enemy->hp = 0; finished = true; playerWon = true; log += " - Victory!"; return; }

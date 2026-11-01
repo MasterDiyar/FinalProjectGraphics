@@ -53,10 +53,14 @@ not used by the current window/input implementation. No engine is required.
 | State | Controls |
 | --- | --- |
 | Exploration | WASD (also with Shift/Caps Lock) |
-| Battle | 1 attack, 2 skill, 3 defend |
+| Battle | 1 attack, 2 skill, 3 defend (restore up to 2 MP) |
 | Upgrade | 1 +2 attack, 2 +8 max HP and heal, 3 +4 max MP and refill |
 | Defeat | Space to restart |
 | Any state | P to pause/resume |
+
+Defense halves incoming damage and restores up to 2 MP without exceeding the
+maximum. It spends a turn, so the enemy still responds. A skill with insufficient
+MP leaves the turn, resources and defense state unchanged.
 
 Pause freezes movement, combat timers and feedback animations. Actions and
 upgrade choices are disabled until resumed. Movement keys are cleared when
@@ -80,6 +84,15 @@ x64\SpawnLayoutTests.exe
 
 The check covers arena bounds, center clearance and pairwise spacing over
 10,000 random seeds. Build the game first so the `x64` directory exists.
+
+## Battle checks
+
+Battle regression check (Visual Studio Developer Command Prompt):
+
+```bat
+cl /nologo /EHsc /std:c++20 Tests\BattleTests.cpp /Fo:x64\BattleTests.obj /Fe:x64\BattleTests.exe
+x64\BattleTests.exe
+```
 
 ## Next milestones
 
