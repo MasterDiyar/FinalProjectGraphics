@@ -423,7 +423,14 @@ void mouseDown(int button, int pressed, int x, int y) {
     }
 }
 
+size_t enemiesRemaining() {
+    return static_cast<size_t>(std::count_if(enemies.begin(), enemies.end(),
+        [](const Enemy& enemy) { return enemy.stats.alive(); }));
+}
+
 void drawHud() {
+    const size_t remaining = enemiesRemaining();
+    const size_t cleared = enemies.size() - remaining;
     hud.begin(shaderProgram);
     hud.rect(0, 0, 800, 106, glm::vec3(0.055f, 0.075f, 0.12f));
     hud.text(18, 14, "MONSTER CLASH", glm::vec3(0.4f, 0.85f, 1.f));
@@ -432,6 +439,7 @@ void drawHud() {
     hud.text(280, 42, "MP " + std::to_string(playerStats.mp) + "/" + std::to_string(playerStats.maxMp));
     hud.text(550, 42, "ATK " + std::to_string(playerStats.attack));
     hud.text(550, 88, "P - PAUSE", glm::vec3(0.65f, 0.75f, 0.85f));
+    hud.text(280, 88, "ENEMIES " + std::to_string(remaining) + "/" + std::to_string(enemies.size()));
     hud.rect(18, 68, 235, 12, glm::vec3(0.16f));
     hud.rect(18, 68, 235.f * playerStats.hp / playerStats.maxHp, 12, glm::vec3(0.2f, 0.8f, 0.4f));
     hud.rect(280, 68, 235, 12, glm::vec3(0.16f));
@@ -453,6 +461,10 @@ void drawHud() {
         heading = "VICTORY! CHOOSE ONE UPGRADE";
         message = "+3 MP RESTORED. HEALTH AND MANA UPGRADES REFILL THEM.";
         labels = {"[1] +2 ATTACK", "[2] +8 HP / HEAL", "[3] +4 MP / REFILL"};
+        if (remaining == 0) {
+            heading = "FLOOR CLEAR! CHOOSE AN UPGRADE";
+            message = "YOUR CHOICE STARTS THE NEXT, HARDER FLOOR.";
+        }
     }
     else if (state == GameState::Defeat) {
         heading = "YOU DIED - TRY ANOTHER RUN";
@@ -462,6 +474,11 @@ void drawHud() {
     else {
         heading = "EXPLORE THE ARENA";
         message = "WASD TO MOVE. TOUCH AN ENEMY TO START A BATTLE.";
+        hud.rect(18, 550, 764, 10, glm::vec3(0.16f));
+        if (!enemies.empty())
+            hud.rect(18, 550, 764.f * static_cast<float>(cleared) / enemies.size(), 10,
+                glm::vec3(0.2f, 0.8f, 0.4f));
+        hud.text(18, 575, "FLOOR PROGRESS " + std::to_string(cleared) + "/" + std::to_string(enemies.size()));
     }
     hud.text(18, 468, heading, glm::vec3(0.4f, 0.85f, 1.f));
     hud.text(18, 504, message.substr(0, 63));
@@ -563,6 +580,7 @@ void updateGame(float dt) {
     }
 
     std::string t = "Floor " + std::to_string(floorNum) + " | Kills " + std::to_string(kills)
+        + " | Enemies left " + std::to_string(enemiesRemaining())
         + " | HP " + std::to_string(playerStats.hp) + "/" + std::to_string(playerStats.maxHp)
         + " MP " + std::to_string(playerStats.mp) + " ATK " + std::to_string(playerStats.attack);
 

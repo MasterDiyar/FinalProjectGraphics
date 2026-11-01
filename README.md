@@ -67,7 +67,10 @@ upgrade choices are disabled until resumed. Movement keys are cleared when
 toggling pause so a previously held direction does not remain active.
 
 The on-screen HUD shows HP/MP bars, floor, kills, attack, current turn and battle
-messages. Click an action button or use its keyboard shortcut. Battle buttons
+messages, plus the number of surviving enemies. Exploration shows a floor-clear
+progress bar, and the last victory explains that choosing an upgrade advances
+to the next floor. Counts come from living enemies and reset with each floor/run.
+Click an action button or use its keyboard shortcut. Battle buttons
 dim during the enemy turn; the skill button also dims below 3 MP. Upgrade and
 restart buttons are clickable too. The HUD and mouse coordinates scale together
 when the window is resized. Its small built-in bitmap font uses OpenGL triangles

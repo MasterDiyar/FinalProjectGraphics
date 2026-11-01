@@ -10,6 +10,8 @@
 - Press P during exploration and during an enemy turn: movement, attacks and
   animations should freeze; P resumes without spending extra turns.
 - Play one battle through to an upgrade; check the next encounter.
+- Check the enemy counter after each victory and the progress bar in exploration;
+  clearing the floor should show a next-floor prompt, then reset the counter.
 - Try a skill below 3 MP and confirm it does not spend a turn.
 - Check attack/skill lunges, defense motion and red hit flashes on both actors.
 - Check that a final hit animates before the upgrade/defeat screen and that
