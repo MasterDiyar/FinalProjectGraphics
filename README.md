@@ -30,6 +30,20 @@ turn-based encounters. Working title: Monster Clash.
 
 ## Build and run (Windows)
 
+Double-click `run-game.cmd`, or run it from a terminal. It locates Visual Studio,
+builds Debug x64, and launches from the repository root so assets resolve.
+Visual Studio with Desktop development with C++, the v145 toolset and Windows
+SDK must already be installed; the launcher does not install dependencies.
+
+Before a presentation, build and run both regression checks without opening a
+game window:
+
+```bat
+run-game.cmd --check
+```
+
+The command stops on build/test failure. Close any running game before building.
+
 Open `FinalProjectGraphics.slnx` in Visual Studio with Desktop development with C++,
 Windows SDK and the v145 toolset. Select **Debug | x64** and build.
 Alternatively, in a Visual Studio Developer PowerShell:

@@ -2,6 +2,10 @@
 
 ## Before the presentation
 
+Run `run-game.cmd --check` for a Debug x64 build and both regression checks.
+Then double-click `run-game.cmd` to launch. Run the checks on the actual demo
+computer too; they do not verify its graphics driver or the interactive UI.
+
 - Build Debug x64; run from the repository root.
 - Check WASD, mouse clicks and number keys on the presentation computer.
 - Resize the window and confirm that text and buttons remain usable.
