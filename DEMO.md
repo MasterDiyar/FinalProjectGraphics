@@ -2,7 +2,7 @@
 
 ## Before the presentation
 
-Run `run-game.cmd --check` for a Debug x64 build and both regression checks.
+Run `run-game.cmd --check` for a Debug x64 build and all regression checks.
 Then double-click `run-game.cmd` to launch. Run the checks on the actual demo
 computer too; they do not verify its graphics driver or the interactive UI.
 
@@ -41,7 +41,8 @@ computer too; they do not verify its graphics driver or the interactive UI.
 
 - C++20, OpenGL/GLAD, FreeGLUT for window/input, GLM for matrices, stb_image
   for textures; the included GLFW library is currently unused.
-- Scene graph: models are assemblies of transformed cube children.
+- Scene graph: `EnemyNode` owns each mob's fighter, block model and HP bar;
+  `HudNode` renders the final screen-space pass from a state snapshot.
 - Lighting: ambient plus directional diffuse shading; flat face normals come
   from fragment derivatives of world position. There are no cast shadows yet.
 - HUD: bitmap glyphs and rectangles drawn as OpenGL triangles, without a UI

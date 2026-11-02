@@ -151,6 +151,9 @@
   <ItemGroup>
     <ClCompile Include="glad.c" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Game\GameApp.cpp" />
+    <ClCompile Include="Game\EnemyNode.cpp" />
+    <ClCompile Include="Game\HudNode.cpp" />
     <ClCompile Include="Modules\MeshNode.cpp" />
     <ClCompile Include="Modules\ModelLoader.cpp" />
     <ClCompile Include="Modules\Node.cpp" />
@@ -159,6 +162,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game\Hud.h" />
+    <ClInclude Include="Game\GameApp.h" />
+    <ClInclude Include="Game\EnemyNode.h" />
+    <ClInclude Include="Game\HudNode.h" />
+    <ClInclude Include="Game\HudState.h" />
     <ClInclude Include="Game\SpawnLayout.h" />
     <ClInclude Include="Modules\MeshNode.h" />
     <ClInclude Include="Modules\ModelLoader.h" />

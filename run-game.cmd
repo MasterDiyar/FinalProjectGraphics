@@ -41,6 +41,14 @@ cl /nologo /EHsc /std:c++20 Tests\SpawnLayoutTests.cpp /Fo:x64\SpawnLayoutTests.
 if errorlevel 1 goto failed
 "x64\SpawnLayoutTests.exe"
 if errorlevel 1 goto failed
+cl /nologo /EHsc /std:c++20 Tests\HudStateTests.cpp /Fo:x64\HudStateTests.obj /Fe:x64\HudStateTests.exe
+if errorlevel 1 goto failed
+"x64\HudStateTests.exe"
+if errorlevel 1 goto failed
+cl /nologo /EHsc /std:c++20 /I Libraries\include Tests\EnemyNodeTests.cpp Game\EnemyNode.cpp Modules\MeshNode.cpp glad.c /Fo:x64\ /Fe:x64\EnemyNodeTests.exe /link /LIBPATH:Libraries\lib opengl32.lib
+if errorlevel 1 goto failed
+"x64\EnemyNodeTests.exe"
+if errorlevel 1 goto failed
 echo Build and regression checks passed.
 
 :success

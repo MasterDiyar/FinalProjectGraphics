@@ -35,7 +35,7 @@ builds Debug x64, and launches from the repository root so assets resolve.
 Visual Studio with Desktop development with C++, the v145 toolset and Windows
 SDK must already be installed; the launcher does not install dependencies.
 
-Before a presentation, build and run both regression checks without opening a
+Before a presentation, build and run all regression checks without opening a
 game window:
 
 ```bat
@@ -61,6 +61,29 @@ Release has not been validated yet; it needs its matching FreeGLUT runtime DLL.
 
 Rendering uses OpenGL, GLAD, GLM, FreeGLUT and stb_image. GLFW is bundled but is
 not used by the current window/input implementation. No engine is required.
+
+## Code structure
+
+- `Main.cpp`: application entry point only; calls `runGame`.
+- `Game/GameApp.cpp`: window callbacks, scene assembly, combat orchestration,
+  camera and renderer initialization. Owns the run state.
+- `Game/EnemyNode.h/.cpp`: a `Node` that owns the fighter, model variants,
+  animation anchor and HP bar. `spawn` selects its type and floor scaling;
+  `_Process` updates visibility and the bar, including final-hit feedback.
+- `Game/HudNode.h/.cpp`: a `Node` that draws the HUD as the last scene pass.
+  Receives a `HudState` value snapshot; it does not mutate combat state.
+- `Game/HudState.h`: button availability and hit testing on the shared 800x600
+  canvas. The mouse callback forwards the returned action to the same game
+  logic used by keyboard input. `Game/Hud.h` remains the text/rectangle renderer.
+
+The root scene owns the arena, player, player HP bar, three `EnemyNode` children
+and finally `HudNode`. Each mob owns its body/model subtree and its own HP bar;
+the scene traverses their updates and renders normally. Keep `HudNode` last so
+screen-space drawing follows all world geometry.
+
+`run-game.cmd --check` covers combat, spawn spacing, HUD input/state and enemy
+node lifecycle/hierarchy. The node test exercises CPU-side updates without a
+graphics context; it does not verify the rendered image.
 
 ## Controls
 
