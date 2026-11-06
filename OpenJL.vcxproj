@@ -149,6 +149,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Modules\ArenaNode.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Game\GameApp.cpp" />
@@ -159,8 +160,10 @@
     <ClCompile Include="Modules\Node.cpp" />
     <ClCompile Include="Modules\Texture.cpp" />
     <ClCompile Include="Modules\Vector3.cpp" />
+    <ClCompile Include="Modules\PlayerNode.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Modules\ArenaNode.h" />
     <ClInclude Include="Game\Hud.h" />
     <ClInclude Include="Game\GameApp.h" />
     <ClInclude Include="Game\EnemyNode.h" />
@@ -172,6 +175,10 @@
     <ClInclude Include="Modules\Node.h" />
     <ClInclude Include="Modules\Texture.h" />
     <ClInclude Include="Modules\Vector3.h" />
+    <ClInclude Include="Modules\PlayerNode.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\Downloads\seamless-green-grass-pattern_1284-52275.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="CopyDebugFreeGlutRuntime" AfterTargets="Build" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
