@@ -47,6 +47,7 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
         heading = enemy.name + "  HP " + std::to_string(enemy.hp) + "/" + std::to_string(enemy.maxHp);
         message = model.log;
         labels = {"[1] ATTACK", "[2] SKILL - 3 MP", "[3] DEFEND +2 MP"};
+        hud.bar(18, 486, 300, 12, fraction(enemy.hp, enemy.maxHp), glm::vec3(0.85f, 0.25f, 0.25f));
         std::string turn = model.playerTurn ? "YOUR TURN" : "ENEMY TURN";
         if (model.resolving) turn = "RESOLVING ACTION";
         hud.text(18, 88, turn, glm::vec3(1.f, 0.8f, 0.3f));
