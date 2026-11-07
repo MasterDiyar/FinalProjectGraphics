@@ -106,6 +106,19 @@ public:
         flush(color);
     }
 
+    // Outline only, drawn inside the given rectangle.
+    void frame(float x, float y, float w, float h, glm::vec3 color, float t = 2.f) {
+        rect(x, y, w, t, color);
+        rect(x, y + h - t, w, t, color);
+        rect(x, y + t, t, h - 2 * t, color);
+        rect(x + w - t, y + t, t, h - 2 * t, color);
+    }
+
+    void panel(float x, float y, float w, float h, glm::vec3 fill, glm::vec3 border) {
+        rect(x, y, w, h, fill);
+        frame(x, y, w, h, border);
+    }
+
     void text(float x, float y, const std::string& value, glm::vec3 color = glm::vec3(0.94f)) {
         for (char c : value) {
             const auto rows = glyph(c);
