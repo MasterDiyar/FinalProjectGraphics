@@ -53,6 +53,8 @@ namespace {
     glm::vec3 cameraEye(0.f, 7.f, 9.f);
     glm::vec3 cameraTarget(0.f);
     float cameraAngle = 0.0f; // Угол поворота камеры на Q и E
+    float cameraShake = 0.f, shakeTime = 0.f; // hit shake strength (0-1) and its phase
+    glm::vec3 shakeOffset(0.f);
 
     struct CombatMotion {
         std::shared_ptr<MeshNode> actor;
@@ -88,8 +90,9 @@ namespace {
     };
     CombatMotion playerMotion, enemyMotion;
 
-    void hitBurst(Vector3 where, Vector3 color, int count) {
+    void hitBurst(Vector3 where, Vector3 color, int count, float shake) {
         if (particles) particles->burst(Vector3(where.X, where.Y + 0.6f, where.Z), color, count);
+        cameraShake = std::max(cameraShake, shake);
     }
 
     const char* vertexShaderSrc =
@@ -272,7 +275,7 @@ namespace {
                 enemyMotion.actor = target;
                 enemyMotion.hitTime = 0.3f;
                 hitBurst(target->getPosition(), k == '2' ? Vector3(0.5f, 0.8f, 1.f) : Vector3(1.f, 0.85f, 0.35f),
-                    k == '2' ? 26 : 14);
+                    k == '2' ? 26 : 14, k == '2' ? 0.8f : 0.5f);
             }
         }
         else if (state == GameState::Upgrade) {
@@ -363,6 +366,10 @@ namespace {
 
     void updateGame(float dt) {
         if (paused) return;
+        shakeTime += dt;
+        cameraShake = std::max(0.f, cameraShake - 3.f * dt);
+        shakeOffset = glm::vec3(std::sin(shakeTime * 90.f), std::sin(shakeTime * 71.f + 1.3f), 0.f)
+            * (cameraShake * 0.15f);
         playerMotion.update(dt);
         enemyMotion.update(dt);
         if (state == GameState::Explore) {
@@ -390,7 +397,7 @@ namespace {
                 enemyMotion.strike(enemies[currentEnemy]->body, player->getBody());
                 playerMotion.actor = player->getBody();
                 playerMotion.hitTime = 0.3f;
-                hitBurst(player->getPosition(), Vector3(0.95f, 0.25f, 0.2f), 14);
+                hitBurst(player->getPosition(), Vector3(0.95f, 0.25f, 0.2f), 14, 1.f);
             }
             if (battle.finished && !playerMotion.active() && !enemyMotion.active()) {
                 if (battle.playerWon) {
@@ -440,7 +447,7 @@ namespace {
         float blend = paused ? 0.f : 1.f - std::exp(-6.f * dt);
         cameraEye = glm::mix(cameraEye, eye, blend);
         cameraTarget = glm::mix(cameraTarget, target, blend);
-        return glm::lookAt(cameraEye, cameraTarget, glm::vec3(0, 1, 0));
+        return glm::lookAt(cameraEye + shakeOffset, cameraTarget, glm::vec3(0, 1, 0));
     }
 
     void display() {
