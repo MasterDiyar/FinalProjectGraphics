@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <algorithm>
 #include <array>
 #include <cctype>
 #include <string>
@@ -117,6 +118,13 @@ public:
     void panel(float x, float y, float w, float h, glm::vec3 fill, glm::vec3 border) {
         rect(x, y, w, h, fill);
         frame(x, y, w, h, border);
+    }
+
+    // Framed progress bar; ratio is clamped to [0, 1].
+    void bar(float x, float y, float w, float h, float ratio, glm::vec3 fill) {
+        panel(x, y, w, h, glm::vec3(0.035f, 0.045f, 0.07f), glm::vec3(0.2f, 0.28f, 0.4f));
+        ratio = std::clamp(ratio, 0.f, 1.f);
+        if (ratio > 0.f) rect(x + 2, y + 2, (w - 4) * ratio, h - 4, fill);
     }
 
     void text(float x, float y, const std::string& value, glm::vec3 color = glm::vec3(0.94f)) {
