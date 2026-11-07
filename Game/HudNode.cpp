@@ -4,6 +4,17 @@ namespace {
 const glm::vec3 kPanel(0.055f, 0.075f, 0.12f);
 const glm::vec3 kBorder(0.16f, 0.24f, 0.36f);
 const glm::vec3 kAccent(0.4f, 0.85f, 1.f);
+
+float fraction(int value, int maxValue) {
+    return maxValue > 0 ? std::clamp(static_cast<float>(value) / maxValue, 0.f, 1.f) : 0.f;
+}
+
+// Green while healthy, yellow when hurt, red when low.
+glm::vec3 hpColor(float ratio) {
+    if (ratio > 0.5f) return glm::vec3(0.2f, 0.8f, 0.4f);
+    if (ratio > 0.25f) return glm::vec3(0.95f, 0.75f, 0.2f);
+    return glm::vec3(0.9f, 0.25f, 0.25f);
+}
 }
 
 void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
@@ -23,10 +34,9 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
     hud.text(550, 42, "ATK " + std::to_string(playerStats.attack));
     hud.text(550, 88, "P - PAUSE", glm::vec3(0.65f, 0.75f, 0.85f));
     hud.text(280, 88, "ENEMIES " + std::to_string(remaining) + "/" + std::to_string(model.total));
-    hud.rect(18, 68, 235, 12, glm::vec3(0.16f));
-    hud.rect(18, 68, 235.f * playerStats.hp / playerStats.maxHp, 12, glm::vec3(0.2f, 0.8f, 0.4f));
-    hud.rect(280, 68, 235, 12, glm::vec3(0.16f));
-    hud.rect(280, 68, 235.f * playerStats.mp / playerStats.maxMp, 12, glm::vec3(0.25f, 0.55f, 1.f));
+    const float hpRatio = fraction(playerStats.hp, playerStats.maxHp);
+    hud.bar(18, 66, 235, 16, hpRatio, hpColor(hpRatio));
+    hud.bar(280, 66, 235, 16, fraction(playerStats.mp, playerStats.maxMp), glm::vec3(0.25f, 0.55f, 1.f));
 
     hud.panel(0, 452, 800, 148, kPanel, kBorder);
     hud.rect(0, 452, 800, 2, kAccent * 0.6f);
