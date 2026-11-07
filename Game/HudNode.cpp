@@ -27,7 +27,7 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
     hud.begin(shaderProgram);
     hud.panel(0, 0, 800, 114, kPanel, kBorder);
     hud.rect(0, 112, 800, 2, kAccent * 0.6f);
-    hud.text(18, 14, "MONSTER CLASH", glm::vec3(0.4f, 0.85f, 1.f));
+    hud.shadowText(18, 12, "MONSTER CLASH", kAccent, 3.f);
     hud.text(430, 14, "FLOOR " + std::to_string(floorNum) + "  KILLS " + std::to_string(kills));
     hud.text(18, 42, "HP " + std::to_string(playerStats.hp) + "/" + std::to_string(playerStats.maxHp));
     hud.text(280, 42, "MP " + std::to_string(playerStats.mp) + "/" + std::to_string(playerStats.maxMp));
@@ -74,7 +74,7 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
                 glm::vec3(0.2f, 0.8f, 0.4f));
         hud.text(18, 575, "FLOOR PROGRESS " + std::to_string(cleared) + "/" + std::to_string(model.total));
     }
-    hud.text(18, 468, heading, glm::vec3(0.4f, 0.85f, 1.f));
+    hud.shadowText(18, 468, heading, kAccent);
     hud.text(18, 504, message.substr(0, 63));
     for (int i = 0; i < 3; ++i) {
         if (labels[i].empty()) continue;
