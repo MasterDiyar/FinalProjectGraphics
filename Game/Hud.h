@@ -127,15 +127,28 @@ public:
         if (ratio > 0.f) rect(x + 2, y + 2, (w - 4) * ratio, h - 4, fill);
     }
 
-    void text(float x, float y, const std::string& value, glm::vec3 color = glm::vec3(0.94f)) {
+    // Scale is the pixel size of one font dot; the default 2 gives 12 px per character.
+    static float textWidth(const std::string& value, float scale = 2.f) {
+        return static_cast<float>(value.size()) * 6.f * scale;
+    }
+
+    void text(float x, float y, const std::string& value, glm::vec3 color = glm::vec3(0.94f),
+        float scale = 2.f) {
         for (char c : value) {
             const auto rows = glyph(c);
             for (int row = 0; row < 7; ++row)
                 for (int col = 0; col < 5; ++col)
-                    if (rows[row] & (1 << (4 - col))) quad(x + col * 2.f, y + row * 2.f, 2, 2);
-            x += 12.f;
+                    if (rows[row] & (1 << (4 - col))) quad(x + col * scale, y + row * scale, scale, scale);
+            x += 6.f * scale;
         }
         flush(color);
+    }
+
+    // Text with a dark offset copy underneath for readability.
+    void shadowText(float x, float y, const std::string& value, glm::vec3 color = glm::vec3(0.94f),
+        float scale = 2.f) {
+        text(x + scale, y + scale, value, glm::vec3(0.01f, 0.015f, 0.03f), scale);
+        text(x, y, value, color, scale);
     }
 
     void end() {
