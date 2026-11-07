@@ -15,6 +15,7 @@
 #include "Battle.h"
 #include "HudNode.h"
 #include "EnemyNode.h"
+#include "ParticleNode.h"
 #include "GameApp.h"
 #include "SpawnLayout.h"
 #include <cmath>
@@ -33,6 +34,7 @@ namespace {
     GameState state = GameState::Explore;
     Battle battle;
     std::shared_ptr<HudNode> hudNode;
+    std::shared_ptr<ParticleNode> particles;
 
     std::vector<std::shared_ptr<EnemyNode>> enemies;
     int currentEnemy = -1;
@@ -85,6 +87,10 @@ namespace {
         }
     };
     CombatMotion playerMotion, enemyMotion;
+
+    void hitBurst(Vector3 where, Vector3 color, int count) {
+        if (particles) particles->burst(Vector3(where.X, where.Y + 0.6f, where.Z), color, count);
+    }
 
     const char* vertexShaderSrc =
         "#version 330 core\n"
@@ -240,6 +246,8 @@ namespace {
             enemies.push_back(enemy);
         }
         spawnEnemies();
+        particles = std::make_shared<ParticleNode>(cubeVAO, cubeIndexCount);
+        rootScene->addChild(particles);
         hudNode = std::make_shared<HudNode>();
         hudNode->init();
         rootScene->addChild(hudNode);
@@ -263,6 +271,8 @@ namespace {
                 playerMotion.strike(player->getBody(), target, k == '2');
                 enemyMotion.actor = target;
                 enemyMotion.hitTime = 0.3f;
+                hitBurst(target->getPosition(), k == '2' ? Vector3(0.5f, 0.8f, 1.f) : Vector3(1.f, 0.85f, 0.35f),
+                    k == '2' ? 26 : 14);
             }
         }
         else if (state == GameState::Upgrade) {
@@ -380,6 +390,7 @@ namespace {
                 enemyMotion.strike(enemies[currentEnemy]->body, player->getBody());
                 playerMotion.actor = player->getBody();
                 playerMotion.hitTime = 0.3f;
+                hitBurst(player->getPosition(), Vector3(0.95f, 0.25f, 0.2f), 14);
             }
             if (battle.finished && !playerMotion.active() && !enemyMotion.active()) {
                 if (battle.playerWon) {
