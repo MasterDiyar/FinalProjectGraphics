@@ -12,9 +12,9 @@ private:
     int cubeIndexCount;
 
     void initFloorMesh();
-    std::shared_ptr<MeshNode> addBlock(Vector3 position, Vector3 scale, Vector3 color);
     void decorateArena();
 
 public:
     ArenaNode(unsigned int cubeVAO, int cubeIndexCount);
+    std::shared_ptr<MeshNode> addBlock(Vector3 position, Vector3 scale, Vector3 color, unsigned int textureId = 0);
 };

@@ -390,7 +390,7 @@ namespace {
         if (state == GameState::Battle)
             t += " | vs " + enemies[currentEnemy]->stats.name + " | [1]Attack [2]Skill [3]Defend | " + battle.log;
         else if (state == GameState::Upgrade)
-            t += " | LOOT: [1] +2 Attack  [2] +8 Max HP (heal)  [3] +4 Max MP";
+            t += " | LOOT: [1] +2 Attack  [2] +8 Max HP (heal)  [3   +4 Max MP";
         else if (state == GameState::Defeat)
             t += " | YOU DIED (permanent +1 ATK) - SPACE to restart";
         else
