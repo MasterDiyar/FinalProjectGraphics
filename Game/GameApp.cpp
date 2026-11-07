@@ -56,6 +56,13 @@ namespace {
     float cameraShake = 0.f, shakeTime = 0.f; // hit shake strength (0-1) and its phase
     glm::vec3 shakeOffset(0.f);
 
+    // World-space position of a node. The hero's body is a child of PlayerNode while enemy
+    // bodies sit directly in the scene, so their local getPosition() values are not comparable.
+    Vector3 worldPosition(const std::shared_ptr<MeshNode>& node) {
+        const glm::mat4 m = node->getWorldTransform();
+        return Vector3(m[3].x, m[3].y, m[3].z);
+    }
+
     struct CombatMotion {
         std::shared_ptr<MeshNode> actor;
         Vector3 direction;
@@ -65,7 +72,7 @@ namespace {
         bool active() const { return attackTime > 0.f || hitTime > 0.f || guardTime > 0.f; }
         void strike(const std::shared_ptr<MeshNode>& source, const std::shared_ptr<MeshNode>& target, bool skill = false) {
             actor = source;
-            Vector3 a = source->getPosition(), b = target->getPosition();
+            Vector3 a = worldPosition(source), b = worldPosition(target);
             float dx = b.X - a.X, dz = b.Z - a.Z;
             float length = std::sqrt(dx * dx + dz * dz);
             direction = length > 0.001f ? Vector3(dx / length, 0, dz / length) : Vector3(0, 0, -1);
