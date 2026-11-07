@@ -70,8 +70,9 @@ class Hud {
         vertices.insert(vertices.end(), std::begin(data), std::end(data));
     }
 
-    void flush(glm::vec3 color) {
+    void flush(glm::vec3 color, float alpha = 1.f) {
         glUniform3fv(glGetUniformLocation(program, "u_Color"), 1, &color[0]);
+        glUniform1f(glGetUniformLocation(program, "u_Alpha"), alpha);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STREAM_DRAW);
         glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(vertices.size() / 3));
@@ -93,6 +94,8 @@ public:
     void begin(GLuint shader) {
         program = shader;
         glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glUseProgram(program);
         glBindVertexArray(vao);
         const glm::mat4 projection = glm::ortho(0.f, 800.f, 600.f, 0.f, -1.f, 1.f);
@@ -102,9 +105,9 @@ public:
         glUniform1f(glGetUniformLocation(program, "u_HitFlash"), 0.f);
     }
 
-    void rect(float x, float y, float w, float h, glm::vec3 color) {
+    void rect(float x, float y, float w, float h, glm::vec3 color, float alpha = 1.f) {
         quad(x, y, w, h);
-        flush(color);
+        flush(color, alpha);
     }
 
     // Outline only, drawn inside the given rectangle.
@@ -154,6 +157,7 @@ public:
     void end() {
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
     }
 };
