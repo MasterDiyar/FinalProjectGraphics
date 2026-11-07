@@ -56,6 +56,15 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
     hud.bar(18, 66, 235, 16, hpRatio, hpColor(hpRatio));
     hud.bar(280, 66, 235, 16, fraction(playerStats.mp, playerStats.maxMp), glm::vec3(0.25f, 0.55f, 1.f));
 
+    if (state == GameState::Defeat) {
+        hud.rect(0, 114, 800, 338, glm::vec3(0.1f, 0.f, 0.f), 0.55f);
+        hud.centerText(240, "YOU DIED", glm::vec3(0.95f, 0.3f, 0.3f), 7.f);
+        hud.centerText(312, "TRY ANOTHER RUN", glm::vec3(0.94f));
+    }
+    if (state == GameState::Upgrade) {
+        hud.rect(0, 225, 800, 100, glm::vec3(0.f), 0.45f);
+        hud.centerText(252, remaining == 0 ? "FLOOR CLEAR!" : "VICTORY!", kGold, 6.f);
+    }
     hud.panel(0, 452, 800, 148, kPanel, kBorder);
     hud.rect(0, 452, 800, 2, kAccent * 0.6f);
     std::string heading, message;
@@ -74,22 +83,22 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
         hud.text(26, 87, turn, tone);
     }
     else if (state == GameState::Upgrade) {
-        heading = "VICTORY! CHOOSE ONE UPGRADE";
+        heading = "CHOOSE ONE UPGRADE";
         message = "+3 MP RESTORED. HEALTH AND MANA UPGRADES REFILL THEM.";
         labels = {Label{"1", "+2 ATTACK"}, Label{"2", "+8 HP / HEAL"}, Label{"3", "+4 MP / REFILL"}};
         if (remaining == 0) {
-            heading = "FLOOR CLEAR! CHOOSE AN UPGRADE";
+            heading = "CHOOSE AN UPGRADE";
             message = "YOUR CHOICE STARTS THE NEXT, HARDER FLOOR.";
         }
     }
     else if (state == GameState::Defeat) {
-        heading = "YOU DIED - TRY ANOTHER RUN";
+        heading = "RUN OVER";
         message = "PERMANENT ATTACK BONUS: +" + std::to_string(metaAttackBonus) + " THIS SESSION";
         labels[0] = Label{"SPACE", "RESTART"};
     }
     else {
         heading = "EXPLORE THE ARENA";
-        message = "WASD TO MOVE. TOUCH AN ENEMY TO START A BATTLE.";
+        message = "WASD TO MOVE, Q/E TO ROTATE CAMERA. TOUCH AN ENEMY TO FIGHT.";
         hud.rect(18, 550, 764, 10, glm::vec3(0.16f));
         if (model.total != 0)
             hud.rect(18, 550, 764.f * static_cast<float>(cleared) / model.total, 10,
@@ -103,10 +112,11 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
         drawButton(hud, 18.f + i * 260, labels[i], model.actionEnabled(i), i == model.hover);
     }
     if (paused) {
-        hud.rect(164, 214, 472, 126, glm::vec3(0.035f, 0.05f, 0.09f));
-        hud.text(364, 238, "PAUSED", glm::vec3(1.f, 0.8f, 0.3f));
-        hud.text(226, 276, "PRESS P TO CONTINUE");
-        hud.text(226, 306, "YOUR RUN IS ON HOLD", glm::vec3(0.65f, 0.75f, 0.85f));
+        hud.rect(0, 0, 800, 600, glm::vec3(0.f), 0.55f);
+        hud.panel(164, 200, 472, 160, glm::vec3(0.035f, 0.05f, 0.09f), kGold);
+        hud.centerText(222, "PAUSED", kGold, 4.f);
+        hud.centerText(286, "PRESS P TO CONTINUE", glm::vec3(0.94f));
+        hud.centerText(316, "YOUR RUN IS ON HOLD", glm::vec3(0.65f, 0.75f, 0.85f));
     }
     hud.end();
 }
