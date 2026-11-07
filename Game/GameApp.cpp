@@ -46,6 +46,7 @@ namespace {
     bool paused = false;
     int lastTime = 0;
     int windowWidth = 800, windowHeight = 600;
+    int mouseX = -1, mouseY = -1; // last known mouse position, -1 when outside the window
     constexpr float arenaLimit = 9.5f;
     glm::vec3 cameraEye(0.f, 7.f, 9.f);
     glm::vec3 cameraTarget(0.f);
@@ -315,11 +316,26 @@ namespace {
         snapshot.playerTurn = battle.playerTurn;
         snapshot.finished = battle.finished;
         snapshot.log = battle.log;
+        snapshot.hover = snapshot.buttonAt(mouseX, mouseY, windowWidth, windowHeight);
+        static int lastHover = -1;
+        if (snapshot.hover != lastHover) {
+            lastHover = snapshot.hover;
+            glutSetCursor(lastHover >= 0 ? GLUT_CURSOR_INFO : GLUT_CURSOR_LEFT_ARROW);
+        }
         hudNode->setState(snapshot);
     }
 
     void keyUp(unsigned char k, int, int) {
         keys[static_cast<unsigned char>(std::tolower(k))] = false;
+    }
+
+    void mouseMove(int x, int y) {
+        mouseX = x;
+        mouseY = y;
+    }
+
+    void mouseEntry(int entryState) {
+        if (entryState == GLUT_LEFT) mouseX = mouseY = -1;
     }
 
     void reshape(int width, int height) {
@@ -472,6 +488,9 @@ int runGame(int argc, char** argv) {
     glutKeyboardFunc(keyDown);
     glutKeyboardUpFunc(keyUp);
     glutMouseFunc(mouseDown);
+    glutPassiveMotionFunc(mouseMove);
+    glutMotionFunc(mouseMove);
+    glutEntryFunc(mouseEntry);
     lastTime = glutGet(GLUT_ELAPSED_TIME);
     glutTimerFunc(0, timer, 0);
 
