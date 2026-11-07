@@ -4,6 +4,7 @@ namespace {
 const glm::vec3 kPanel(0.055f, 0.075f, 0.12f);
 const glm::vec3 kBorder(0.16f, 0.24f, 0.36f);
 const glm::vec3 kAccent(0.4f, 0.85f, 1.f);
+const glm::vec3 kGold(1.f, 0.8f, 0.3f);
 
 float fraction(int value, int maxValue) {
     return maxValue > 0 ? std::clamp(static_cast<float>(value) / maxValue, 0.f, 1.f) : 0.f;
@@ -14,6 +15,21 @@ glm::vec3 hpColor(float ratio) {
     if (ratio > 0.5f) return glm::vec3(0.2f, 0.8f, 0.4f);
     if (ratio > 0.25f) return glm::vec3(0.95f, 0.75f, 0.2f);
     return glm::vec3(0.9f, 0.25f, 0.25f);
+}
+
+struct Label { std::string key, text; };
+
+// A 244 x 42 button at the shared hit-test position, with a key badge on the left.
+void drawButton(Hud& hud, float x, const Label& label, bool enabled) {
+    const float y = 542, w = 244, h = 42;
+    const glm::vec3 fill = enabled ? glm::vec3(0.14f, 0.28f, 0.44f) : glm::vec3(0.09f, 0.11f, 0.15f);
+    const glm::vec3 border = enabled ? kAccent * 0.8f : glm::vec3(0.18f, 0.2f, 0.25f);
+    hud.panel(x, y, w, h, fill, border);
+    const float badge = std::max(28.f, Hud::textWidth(label.key) + 12.f);
+    hud.panel(x + 7, y + 7, badge, 28, glm::vec3(0.04f, 0.06f, 0.1f), border);
+    hud.text(x + 7 + (badge - Hud::textWidth(label.key)) / 2, y + 14, label.key,
+        enabled ? kGold : glm::vec3(0.4f));
+    hud.text(x + 7 + badge + 10, y + 14, label.text, enabled ? glm::vec3(0.96f) : glm::vec3(0.45f));
 }
 }
 
@@ -41,21 +57,24 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
     hud.panel(0, 452, 800, 148, kPanel, kBorder);
     hud.rect(0, 452, 800, 2, kAccent * 0.6f);
     std::string heading, message;
-    std::array<std::string, 3> labels;
+    std::array<Label, 3> labels;
     if (state == GameState::Battle) {
         const Fighter& enemy = model.enemy;
         heading = enemy.name + "  HP " + std::to_string(enemy.hp) + "/" + std::to_string(enemy.maxHp);
         message = model.log;
-        labels = {"[1] ATTACK", "[2] SKILL - 3 MP", "[3] DEFEND +2 MP"};
+        labels = {Label{"1", "ATTACK"}, Label{"2", "SKILL - 3 MP"}, Label{"3", "DEFEND +2 MP"}};
         hud.bar(18, 486, 300, 12, fraction(enemy.hp, enemy.maxHp), glm::vec3(0.85f, 0.25f, 0.25f));
         std::string turn = model.playerTurn ? "YOUR TURN" : "ENEMY TURN";
         if (model.resolving) turn = "RESOLVING ACTION";
-        hud.text(18, 88, turn, glm::vec3(1.f, 0.8f, 0.3f));
+        const glm::vec3 tone = model.resolving ? kGold
+            : model.playerTurn ? glm::vec3(0.3f, 0.9f, 0.5f) : glm::vec3(0.95f, 0.4f, 0.35f);
+        hud.panel(18, 84, Hud::textWidth(turn) + 16, 20, tone * 0.25f, tone);
+        hud.text(26, 87, turn, tone);
     }
     else if (state == GameState::Upgrade) {
         heading = "VICTORY! CHOOSE ONE UPGRADE";
         message = "+3 MP RESTORED. HEALTH AND MANA UPGRADES REFILL THEM.";
-        labels = {"[1] +2 ATTACK", "[2] +8 HP / HEAL", "[3] +4 MP / REFILL"};
+        labels = {Label{"1", "+2 ATTACK"}, Label{"2", "+8 HP / HEAL"}, Label{"3", "+4 MP / REFILL"}};
         if (remaining == 0) {
             heading = "FLOOR CLEAR! CHOOSE AN UPGRADE";
             message = "YOUR CHOICE STARTS THE NEXT, HARDER FLOOR.";
@@ -64,7 +83,7 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
     else if (state == GameState::Defeat) {
         heading = "YOU DIED - TRY ANOTHER RUN";
         message = "PERMANENT ATTACK BONUS: +" + std::to_string(metaAttackBonus) + " THIS SESSION";
-        labels[0] = "SPACE / RESTART";
+        labels[0] = Label{"SPACE", "RESTART"};
     }
     else {
         heading = "EXPLORE THE ARENA";
@@ -78,11 +97,8 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
     hud.shadowText(18, 468, heading, kAccent);
     hud.text(18, 504, message.substr(0, 63));
     for (int i = 0; i < 3; ++i) {
-        if (labels[i].empty()) continue;
-        bool enabled = model.actionEnabled(i);
-        hud.rect(18.f + i * 260, 542, 244, 42,
-            enabled ? glm::vec3(0.16f, 0.32f, 0.48f) : glm::vec3(0.13f, 0.15f, 0.19f));
-        hud.text(28.f + i * 260, 556, labels[i], enabled ? glm::vec3(0.96f) : glm::vec3(0.45f));
+        if (labels[i].text.empty()) continue;
+        drawButton(hud, 18.f + i * 260, labels[i], model.actionEnabled(i));
     }
     if (paused) {
         hud.rect(164, 214, 472, 126, glm::vec3(0.035f, 0.05f, 0.09f));
