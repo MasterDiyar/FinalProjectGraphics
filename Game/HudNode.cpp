@@ -1,5 +1,11 @@
 #include "HudNode.h"
 
+namespace {
+const glm::vec3 kPanel(0.055f, 0.075f, 0.12f);
+const glm::vec3 kBorder(0.16f, 0.24f, 0.36f);
+const glm::vec3 kAccent(0.4f, 0.85f, 1.f);
+}
+
 void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
     const auto state = model.state;
     const auto& playerStats = model.player;
@@ -8,7 +14,8 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
     const size_t remaining = model.remaining;
     const size_t cleared = model.total - remaining;
     hud.begin(shaderProgram);
-    hud.rect(0, 0, 800, 106, glm::vec3(0.055f, 0.075f, 0.12f));
+    hud.panel(0, 0, 800, 114, kPanel, kBorder);
+    hud.rect(0, 112, 800, 2, kAccent * 0.6f);
     hud.text(18, 14, "MONSTER CLASH", glm::vec3(0.4f, 0.85f, 1.f));
     hud.text(430, 14, "FLOOR " + std::to_string(floorNum) + "  KILLS " + std::to_string(kills));
     hud.text(18, 42, "HP " + std::to_string(playerStats.hp) + "/" + std::to_string(playerStats.maxHp));
@@ -21,7 +28,8 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
     hud.rect(280, 68, 235, 12, glm::vec3(0.16f));
     hud.rect(280, 68, 235.f * playerStats.mp / playerStats.maxMp, 12, glm::vec3(0.25f, 0.55f, 1.f));
 
-    hud.rect(0, 452, 800, 148, glm::vec3(0.055f, 0.075f, 0.12f));
+    hud.panel(0, 452, 800, 148, kPanel, kBorder);
+    hud.rect(0, 452, 800, 2, kAccent * 0.6f);
     std::string heading, message;
     std::array<std::string, 3> labels;
     if (state == GameState::Battle) {
