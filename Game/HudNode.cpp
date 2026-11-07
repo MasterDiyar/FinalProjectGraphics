@@ -20,10 +20,12 @@ glm::vec3 hpColor(float ratio) {
 struct Label { std::string key, text; };
 
 // A 244 x 42 button at the shared hit-test position, with a key badge on the left.
-void drawButton(Hud& hud, float x, const Label& label, bool enabled) {
+void drawButton(Hud& hud, float x, const Label& label, bool enabled, bool hovered) {
     const float y = 542, w = 244, h = 42;
-    const glm::vec3 fill = enabled ? glm::vec3(0.14f, 0.28f, 0.44f) : glm::vec3(0.09f, 0.11f, 0.15f);
-    const glm::vec3 border = enabled ? kAccent * 0.8f : glm::vec3(0.18f, 0.2f, 0.25f);
+    const glm::vec3 fill = !enabled ? glm::vec3(0.09f, 0.11f, 0.15f)
+        : hovered ? glm::vec3(0.2f, 0.4f, 0.6f) : glm::vec3(0.14f, 0.28f, 0.44f);
+    const glm::vec3 border = !enabled ? glm::vec3(0.18f, 0.2f, 0.25f)
+        : hovered ? kGold : kAccent * 0.8f;
     hud.panel(x, y, w, h, fill, border);
     const float badge = std::max(28.f, Hud::textWidth(label.key) + 12.f);
     hud.panel(x + 7, y + 7, badge, 28, glm::vec3(0.04f, 0.06f, 0.1f), border);
@@ -98,7 +100,7 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
     hud.text(18, 504, message.substr(0, 63));
     for (int i = 0; i < 3; ++i) {
         if (labels[i].text.empty()) continue;
-        drawButton(hud, 18.f + i * 260, labels[i], model.actionEnabled(i));
+        drawButton(hud, 18.f + i * 260, labels[i], model.actionEnabled(i), i == model.hover);
     }
     if (paused) {
         hud.rect(164, 214, 472, 126, glm::vec3(0.035f, 0.05f, 0.09f));
