@@ -111,6 +111,7 @@ namespace {
         "uniform bool u_UseTex;\n"
         "uniform bool u_Lighting;\n"
         "uniform float u_HitFlash;\n"
+        "uniform float u_Alpha;\n"
         "void main() {\n"
         "   vec3 c = u_UseTex ? texture(u_Tex, vUV).rgb * u_Color : u_Color;\n"
         "   c = mix(c, vec3(1.0, 0.25, 0.2), clamp(u_HitFlash, 0.0, 1.0));\n"
@@ -118,7 +119,7 @@ namespace {
         "       vec3 n = normalize(cross(dFdx(vWorld), dFdy(vWorld)));\n"
         "       c *= 0.45 + 0.55 * max(dot(n, normalize(vec3(-0.4, 1.0, 0.6))), 0.0);\n"
         "   }\n"
-        "   FragColor = vec4(c, 1.0);\n"
+        "   FragColor = vec4(c, u_Alpha);\n"
         "}\n";
 
     GLuint compileShader(GLenum type, const char* source) {
@@ -448,6 +449,7 @@ namespace {
         refreshHud();
         rootScene->update(paused ? 0.f : dt);
         glUniform1i(glGetUniformLocation(shaderProgram, "u_Lighting"), GL_TRUE);
+        glUniform1f(glGetUniformLocation(shaderProgram, "u_Alpha"), 1.f);
         rootScene->render(shaderProgram, proj * view);
         glutSwapBuffers();
     }
