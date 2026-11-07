@@ -154,6 +154,11 @@ public:
         text(x, y, value, color, scale);
     }
 
+    // Text centered horizontally on the 800 px canvas.
+    void centerText(float y, const std::string& value, glm::vec3 color, float scale = 2.f) {
+        shadowText((800.f - textWidth(value, scale)) / 2.f, y, value, color, scale);
+    }
+
     void end() {
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
