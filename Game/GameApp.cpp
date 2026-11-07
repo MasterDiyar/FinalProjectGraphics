@@ -381,22 +381,6 @@ namespace {
 
         for (auto& e : enemies)
             e->keepVisibleForFeedback(e->body == enemyMotion.actor && (enemyMotion.active() || playerMotion.active()));
-
-        std::string t = "Floor " + std::to_string(floorNum) + " | Kills " + std::to_string(kills)
-            + " | Enemies left " + std::to_string(enemiesRemaining())
-            + " | HP " + std::to_string(player->stats.hp) + "/" + std::to_string(player->stats.maxHp)
-            + " MP " + std::to_string(player->stats.mp) + " ATK " + std::to_string(player->stats.attack);
-
-        if (state == GameState::Battle)
-            t += " | vs " + enemies[currentEnemy]->stats.name + " | [1]Attack [2]Skill [3]Defend | " + battle.log;
-        else if (state == GameState::Upgrade)
-            t += " | LOOT: [1] +2 Attack  [2] +8 Max HP (heal)  [3   +4 Max MP";
-        else if (state == GameState::Defeat)
-            t += " | YOU DIED (permanent +1 ATK) - SPACE to restart";
-        else
-            t += " | WASD to move, Q/E to rotate camera, touch an enemy";
-
-        glutSetWindowTitle(t.c_str());
     }
 
     glm::mat4 updateCamera(float dt) {
@@ -463,7 +447,7 @@ int runGame(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(800, 600);
-    glutCreateWindow("OpenGL Scene Graph");
+    glutCreateWindow("Monster Clash");
 
     if (!gladLoadGL()) {
         std::cerr << "Failed to initialize GLAD!" << std::endl;
