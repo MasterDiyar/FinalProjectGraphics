@@ -16,6 +16,7 @@
 #include "HudNode.h"
 #include "EnemyNode.h"
 #include "ParticleNode.h"
+#include "ShadowMap.h"
 #include "GameApp.h"
 #include "SpawnLayout.h"
 #include <cmath>
@@ -32,6 +33,7 @@ namespace {
 
     std::shared_ptr<Node> rootScene;
     std::shared_ptr<Node> worldScene; // everything that casts shadows; the HUD stays outside
+    ShadowMap shadowMap;
     GameState state = GameState::Explore;
     Battle battle;
     std::shared_ptr<HudNode> hudNode;
@@ -476,6 +478,10 @@ namespace {
 
         refreshHud();
         rootScene->update(paused ? 0.f : dt);
+        shadowMap.begin();
+        worldScene->render(shadowMap.program, ShadowMap::sunMatrix());
+        shadowMap.end(windowWidth, windowHeight);
+        glUseProgram(shaderProgram);
         glUniform1i(glGetUniformLocation(shaderProgram, "u_Lighting"), GL_TRUE);
         glUniform1f(glGetUniformLocation(shaderProgram, "u_Alpha"), 1.f);
         rootScene->render(shaderProgram, proj * view);
@@ -504,6 +510,7 @@ int runGame(int argc, char** argv) {
 
     try {
         initShaders();
+        shadowMap.init();
     }
     catch (const std::exception& error) {
         std::cerr << error.what() << std::endl;
