@@ -131,12 +131,22 @@ namespace {
         "uniform bool u_Lighting;\n"
         "uniform float u_HitFlash;\n"
         "uniform float u_Alpha;\n"
+        "uniform vec3 u_SunDir;\n"
+        "uniform mat4 u_LightVP;\n"
+        "uniform sampler2D u_ShadowMap;\n"
+        "float shadowAt(vec3 world) {\n"
+        "   vec4 p = u_LightVP * vec4(world, 1.0);\n"
+        "   vec3 q = p.xyz / p.w * 0.5 + 0.5;\n"
+        "   if (q.z > 1.0) return 0.0;\n"
+        "   return (q.z - 0.002 > textureLod(u_ShadowMap, q.xy, 0.0).r) ? 1.0 : 0.0;\n"
+        "}\n"
         "void main() {\n"
         "   vec3 c = u_UseTex ? texture(u_Tex, vUV).rgb * u_Color : u_Color;\n"
         "   c = mix(c, vec3(1.0, 0.25, 0.2), clamp(u_HitFlash, 0.0, 1.0));\n"
         "   if (u_Lighting) {\n"
         "       vec3 n = normalize(cross(dFdx(vWorld), dFdy(vWorld)));\n"
-        "       c *= 0.45 + 0.55 * max(dot(n, normalize(vec3(-0.4, 1.0, 0.6))), 0.0);\n"
+        "       float diffuse = max(dot(n, normalize(u_SunDir)), 0.0);\n"
+        "       c *= 0.45 + 0.55 * diffuse * (1.0 - 0.8 * shadowAt(vWorld));\n"
         "   }\n"
         "   FragColor = vec4(c, u_Alpha);\n"
         "}\n";
@@ -484,7 +494,18 @@ namespace {
         glUseProgram(shaderProgram);
         glUniform1i(glGetUniformLocation(shaderProgram, "u_Lighting"), GL_TRUE);
         glUniform1f(glGetUniformLocation(shaderProgram, "u_Alpha"), 1.f);
+        const glm::vec3 sunDirection = ShadowMap::sunDirection();
+        const glm::mat4 sunMatrix = ShadowMap::sunMatrix();
+        glUniform3fv(glGetUniformLocation(shaderProgram, "u_SunDir"), 1, &sunDirection[0]);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "u_LightVP"), 1, GL_FALSE, &sunMatrix[0][0]);
+        glUniform1i(glGetUniformLocation(shaderProgram, "u_ShadowMap"), 1);
+        glActiveTexture(GL_TEXTURE1); // unit 0 stays free for material textures
+        glBindTexture(GL_TEXTURE_2D, shadowMap.texture);
+        glActiveTexture(GL_TEXTURE0);
         rootScene->render(shaderProgram, proj * view);
+        glActiveTexture(GL_TEXTURE1); // release the shadow map before the next depth pass
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glActiveTexture(GL_TEXTURE0);
         glutSwapBuffers();
     }
 
