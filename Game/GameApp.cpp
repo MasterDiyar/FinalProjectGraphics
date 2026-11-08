@@ -31,6 +31,7 @@ namespace {
     int cubeIndexCount = 36;
 
     std::shared_ptr<Node> rootScene;
+    std::shared_ptr<Node> worldScene; // everything that casts shadows; the HUD stays outside
     GameState state = GameState::Explore;
     Battle battle;
     std::shared_ptr<HudNode> hudNode;
@@ -239,25 +240,27 @@ namespace {
 
     void initScene() {
         rootScene = std::make_shared<Node>();
+        worldScene = std::make_shared<Node>();
+        rootScene->addChild(worldScene);
 
         auto arena = std::make_shared<ArenaNode>(cubeVAO, cubeIndexCount);
-        rootScene->addChild(arena);
+        worldScene->addChild(arena);
 
         player = std::make_shared<PlayerNode>(cubeVAO, cubeIndexCount);
-        rootScene->addChild(player);
+        worldScene->addChild(player);
 
         playerHpBar = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
         playerHpBar->color = Vector3(0.1f, 0.9f, 0.1f);
-        rootScene->addChild(playerHpBar);
+        worldScene->addChild(playerHpBar);
 
         for (int i = 0; i < 3; ++i) {
             auto enemy = std::make_shared<EnemyNode>(cubeVAO, cubeIndexCount);
-            rootScene->addChild(enemy);
+            worldScene->addChild(enemy);
             enemies.push_back(enemy);
         }
         spawnEnemies();
         particles = std::make_shared<ParticleNode>(cubeVAO, cubeIndexCount);
-        rootScene->addChild(particles);
+        worldScene->addChild(particles);
         hudNode = std::make_shared<HudNode>();
         hudNode->init();
         rootScene->addChild(hudNode);
