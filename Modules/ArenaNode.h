@@ -11,6 +11,10 @@ private:
     unsigned int cubeVAO;
     int cubeIndexCount;
 
+    unsigned int texturedCubeVAO = 0;
+    int texturedCubeIndexCount = 36;
+    void initTexturedCube();
+
     void initFloorMesh();
     void decorateArena();
 

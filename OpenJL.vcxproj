@@ -180,6 +180,11 @@
   <ItemGroup>
     <Image Include="..\..\..\..\Downloads\seamless-green-grass-pattern_1284-52275.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\outline.frag" />
+    <None Include="shaders\outline.vert" />
+    <None Include="shaders\player_shader.frag" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="CopyDebugFreeGlutRuntime" AfterTargets="Build" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <!-- The bundled import library requests freeglut.dll. -->

@@ -400,7 +400,7 @@ namespace {
         playerMotion.update(dt);
         enemyMotion.update(dt);
         if (state == GameState::Explore) {
-            player->handleMovement(keys, dt);
+            player->handleMovement(keys, dt, cameraAngle);
             Vector3 p = player->getPosition();
 
             for (size_t i = 0; i < enemies.size(); i++) {
@@ -446,7 +446,6 @@ namespace {
     }
 
     glm::mat4 updateCamera(float dt) {
-        // Управление вращением камеры через клавиши Q и E
         if (keys['q']) cameraAngle += 2.0f * dt;
         if (keys['e']) cameraAngle -= 2.0f * dt;
 
@@ -504,11 +503,11 @@ namespace {
         glUniform3fv(glGetUniformLocation(shaderProgram, "u_SunDir"), 1, &sunDirection[0]);
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "u_LightVP"), 1, GL_FALSE, &sunMatrix[0][0]);
         glUniform1i(glGetUniformLocation(shaderProgram, "u_ShadowMap"), 1);
-        glActiveTexture(GL_TEXTURE1); // unit 0 stays free for material textures
+        glActiveTexture(GL_TEXTURE1); 
         glBindTexture(GL_TEXTURE_2D, shadowMap.texture);
         glActiveTexture(GL_TEXTURE0);
         rootScene->render(shaderProgram, proj * view);
-        glActiveTexture(GL_TEXTURE1); // release the shadow map before the next depth pass
+        glActiveTexture(GL_TEXTURE1); 
         glBindTexture(GL_TEXTURE_2D, 0);
         glActiveTexture(GL_TEXTURE0);
         glutSwapBuffers();
