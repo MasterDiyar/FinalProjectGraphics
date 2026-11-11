@@ -14,7 +14,8 @@ private:
     float arenaLimit = 9.5f;
 
     GLuint toonShaderProgram = 0;
-    GLuint outlineShaderProgram = 0;
+    GLuint rimShaderProgram = 0;
+
     void initPlayerShaders();
     GLuint compileShader(GLenum type, const std::string& source);
 
@@ -29,5 +30,6 @@ public:
 
     std::shared_ptr<MeshNode> getBody() const { return bodyNode; }
 
-    void render(GLuint shaderProgram, const glm::mat4& mvpMatrix) override;
+    // Передаем viewPos (позицию камеры) для корректного расчета Rim Lighting
+    void renderWithRim(GLuint defaultShaderProgram, const glm::mat4& vpMatrix, const glm::vec3& cameraPos);
 };

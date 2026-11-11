@@ -102,5 +102,7 @@
     <None Include="shaders\player_shader.frag" />
     <None Include="shaders\outline.vert" />
     <None Include="shaders\outline.frag" />
+    <None Include="shaders\player_rim.vert" />
+    <None Include="shaders\player_rim.frag" />
   </ItemGroup>
 </Project>

@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 
@@ -25,7 +26,7 @@ PlayerNode::PlayerNode(unsigned int cubeVAO, int cubeIndexCount) {
 
 PlayerNode::~PlayerNode() {
     if (toonShaderProgram) glDeleteProgram(toonShaderProgram);
-    if (outlineShaderProgram) glDeleteProgram(outlineShaderProgram);
+    if (rimShaderProgram) glDeleteProgram(rimShaderProgram);
 }
 
 GLuint PlayerNode::compileShader(GLenum type, const std::string& source) {
@@ -46,6 +47,7 @@ GLuint PlayerNode::compileShader(GLenum type, const std::string& source) {
 
 void PlayerNode::initPlayerShaders() {
     try {
+        // Загрузка Toon шейдера (если используется)
         std::string toonVertCode = loadShaderFile("shaders/player_shader.vert");
         std::string toonFragCode = loadShaderFile("shaders/player_shader.frag");
 
@@ -58,17 +60,18 @@ void PlayerNode::initPlayerShaders() {
         glDeleteShader(tvs);
         glDeleteShader(tfs);
 
-        std::string outlineVertCode = loadShaderFile("shaders/outline.vert");
-        std::string outlineFragCode = loadShaderFile("shaders/outline.frag");
+        // Загрузка Rim Lighting шейдера
+        std::string rimVertCode = loadShaderFile("shaders/player_rim.vert");
+        std::string rimFragCode = loadShaderFile("shaders/player_rim.frag");
 
-        GLuint ovs = compileShader(GL_VERTEX_SHADER, outlineVertCode);
-        GLuint ofs = compileShader(GL_FRAGMENT_SHADER, outlineFragCode);
-        outlineShaderProgram = glCreateProgram();
-        glAttachShader(outlineShaderProgram, ovs);
-        glAttachShader(outlineShaderProgram, ofs);
-        glLinkProgram(outlineShaderProgram);
-        glDeleteShader(ovs);
-        glDeleteShader(ofs);
+        GLuint rvs = compileShader(GL_VERTEX_SHADER, rimVertCode);
+        GLuint rfs = compileShader(GL_FRAGMENT_SHADER, rimFragCode);
+        rimShaderProgram = glCreateProgram();
+        glAttachShader(rimShaderProgram, rvs);
+        glAttachShader(rimShaderProgram, rfs);
+        glLinkProgram(rimShaderProgram);
+        glDeleteShader(rvs);
+        glDeleteShader(rfs);
     }
     catch (const std::exception& e) {
         std::cerr << "Shader loading error: " << e.what() << std::endl;
@@ -82,6 +85,7 @@ void PlayerNode::loadModel(const std::string& objPath, const std::string& textur
         bodyNode = std::make_shared<MeshNode>(heroModel.vao, heroModel.indexCount);
         bodyNode->textureId = loadTexture(texturePath);
         bodyNode->color = Vector3(1.0f, 1.0f, 1.0f);
+        bodyNode->setScale(Vector3(0.01f, 0.01f, 0.01f));
     }
     else {
         bodyNode = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
@@ -138,6 +142,25 @@ void PlayerNode::handleMovement(const bool keys[256], float dt, float cameraAngl
     setPosition(p);
 }
 
-void PlayerNode::render(GLuint defaultShaderProgram, const glm::mat4& vpMatrix) {
-    Node::render(defaultShaderProgram, vpMatrix);
+void PlayerNode::renderWithRim(GLuint defaultShaderProgram, const glm::mat4& vpMatrix, const glm::vec3& cameraPos) {
+    if (rimShaderProgram == 0) {
+        Node::render(defaultShaderProgram, vpMatrix);
+        return;
+    }
+
+    glUseProgram(rimShaderProgram);
+
+    // 1. Позиция камеры для расчета направления взгляда
+    glUniform3fv(glGetUniformLocation(rimShaderProgram, "u_ViewPos"), 1, glm::value_ptr(cameraPos));
+
+    // 2. Настройки свечения Рим-света (можно вынести в конструктор)
+    glUniform3f(glGetUniformLocation(rimShaderProgram, "u_RimColor"), 0.2f, 0.6f, 1.0f); // Голубой неоновый цвет
+    glUniform1f(glGetUniformLocation(rimShaderProgram, "u_RimPower"), 3.0f);                // Ширина контура
+    glUniform1f(glGetUniformLocation(rimShaderProgram, "u_RimIntensity"), 1.8f);            // Интенсивность
+
+    // 3. Передаем общий статус урона (HitFlash)
+    glUniform1f(glGetUniformLocation(rimShaderProgram, "u_HitFlash"), getHitFlash());
+    glUniform1f(glGetUniformLocation(rimShaderProgram, "u_Alpha"), 1.0f);
+
+    Node::render(rimShaderProgram, vpMatrix);
 }

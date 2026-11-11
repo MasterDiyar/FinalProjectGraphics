@@ -183,6 +183,8 @@
   <ItemGroup>
     <None Include="shaders\outline.frag" />
     <None Include="shaders\outline.vert" />
+    <None Include="shaders\player_rim.frag" />
+    <None Include="shaders\player_rim.vert" />
     <None Include="shaders\player_shader.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
