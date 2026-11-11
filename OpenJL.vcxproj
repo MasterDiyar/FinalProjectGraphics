@@ -167,6 +167,8 @@
     <ClInclude Include="Game\Hud.h" />
     <ClInclude Include="Game\GameApp.h" />
     <ClInclude Include="Game\EnemyNode.h" />
+    <ClInclude Include="Game\DissolveState.h" />
+    <ClInclude Include="Game\DissolveShader.h" />
     <ClInclude Include="Game\HudNode.h" />
     <ClInclude Include="Game\HudState.h" />
     <ClInclude Include="Game\SpawnLayout.h" />
@@ -182,6 +184,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\outline.frag" />
+    <None Include="shaders\enemy_dissolve.vert" />
+    <None Include="shaders\enemy_dissolve.frag" />
     <None Include="shaders\outline.vert" />
     <None Include="shaders\player_rim.frag" />
     <None Include="shaders\player_rim.vert" />

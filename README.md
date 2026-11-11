@@ -64,6 +64,10 @@ not used by the current window/input implementation. No engine is required.
 
 ## Code structure
 
+Enemy defeat now uses a dedicated GLSL dissolve effect with an ember edge and
+matching shadow removal. See [shader explanation and demo steps](shaders/README.md).
+Run `run-game.cmd --check-gl` for regression checks plus real-driver GLSL tests.
+
 - `Main.cpp`: application entry point only; calls `runGame`.
 - `Game/GameApp.cpp`: window callbacks, scene assembly, combat orchestration,
   camera and renderer initialization. Owns the run state.

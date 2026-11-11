@@ -26,9 +26,19 @@ int main() {
     enemy->keepVisibleForFeedback(true);
     scene->update(0.f);
     check(enemy->body->getScale().X == 1.f, "Final hit remains visible during feedback");
+    scene->update(1.f);
+    check(enemy->dissolveProgress() == 0.f, "Dissolve waits for final-hit feedback");
     enemy->keepVisibleForFeedback(false);
     scene->update(0.f);
+    check(enemy->body->getScale().X == 1.f, "Dissolve begins with the model visible");
+    scene->update(0.45f);
+    check(enemy->dissolveProgress() > 0.f && !enemy->dissolveFinished(), "Death progresses through dissolve");
+    float pausedProgress = enemy->dissolveProgress();
+    scene->update(0.f);
+    check(enemy->dissolveProgress() == pausedProgress, "Pause freezes dissolve");
+    scene->update(1.f);
     check(enemy->body->getScale().X == 0.f, "Defeated model disappears after feedback");
+    check(enemy->dissolveFinished(), "Death completes before the reward transition");
     enemy->body->setHitFlash(1.f);
     enemy->body->setVisualOffset(Vector3(1, 0, 0));
     enemy->spawn(0, 2.f, Vector3());
@@ -36,5 +46,6 @@ int main() {
     check(enemy->stats.maxHp == 40 && enemy->stats.attack == 12, "Floor scaling is preserved");
     check(enemy->body->getHitFlash() == 0.f && enemy->body->getLocalTransform()[3].x == 0.f, "Respawn clears animation feedback");
     check(enemy->body->getScale().X == 1.f, "Respawn restores visibility");
+    check(enemy->dissolveProgress() == 0.f && !enemy->dissolveFinished(), "Respawn resets dissolve");
     std::cout << "Enemy node lifecycle and scene hierarchy checks passed\n";
 }

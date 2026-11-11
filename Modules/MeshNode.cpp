@@ -7,6 +7,11 @@
 MeshNode::MeshNode(unsigned int vao, int indexCount) : vao(vao), indexCount(indexCount) {}
 
 void MeshNode::render(unsigned int shaderProgram, const glm::mat4& viewProjMatrix) {
+    // Container meshes (such as a mob's animation anchor) have no geometry.
+    if (vao == 0 || indexCount <= 0) {
+        Node::render(shaderProgram, viewProjMatrix);
+        return;
+    }
     glm::mat4 world = getWorldTransform();
     glm::mat4 mvp = viewProjMatrix * world;
 

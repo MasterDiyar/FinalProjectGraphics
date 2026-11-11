@@ -2,8 +2,8 @@
 setlocal EnableExtensions DisableDelayedExpansion
 pushd "%~dp0" || exit /b 1
 
-if not "%~1"=="" if /i not "%~1"=="--check" (
-    echo Usage: run-game.cmd [--check]
+if not "%~1"=="" if /i not "%~1"=="--check" if /i not "%~1"=="--check-gl" (
+    echo Usage: run-game.cmd [--check or --check-gl]
     popd
     exit /b 2
 )
@@ -25,6 +25,7 @@ echo Building Monster Clash - Debug x64...
 if errorlevel 1 goto failed
 
 if /i "%~1"=="--check" goto check
+if /i "%~1"=="--check-gl" goto check
 echo Starting Monster Clash. WASD: move, 1/2/3: actions, P: pause.
 "x64\Debug\OpenJL.exe"
 if errorlevel 1 goto failed
@@ -49,6 +50,14 @@ cl /nologo /EHsc /std:c++20 /I Libraries\include Tests\EnemyNodeTests.cpp Game\E
 if errorlevel 1 goto failed
 "x64\EnemyNodeTests.exe"
 if errorlevel 1 goto failed
+if /i not "%~1"=="--check-gl" goto checksPassed
+copy /Y freeglutd.dll x64\freeglut.dll >nul
+if errorlevel 1 goto failed
+cl /nologo /EHsc /std:c++20 /I Libraries\include Tests\DissolveShaderTests.cpp glad.c /Fo:x64\ /Fe:x64\DissolveShaderTests.exe /link /LIBPATH:Libraries\lib opengl32.lib
+if errorlevel 1 goto failed
+"x64\DissolveShaderTests.exe"
+if errorlevel 1 goto failed
+:checksPassed
 echo Build and regression checks passed.
 
 :success

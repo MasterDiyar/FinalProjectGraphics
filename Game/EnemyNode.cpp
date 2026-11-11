@@ -1,5 +1,6 @@
 #include "EnemyNode.h"
 #include <algorithm>
+#include "ShadowMap.h"
 
 namespace {
 struct EnemyType {
@@ -86,14 +87,40 @@ void EnemyNode::spawn(int typeIndex, float difficulty, Vector3 position) {
     body->setVisualOffset(Vector3());
     body->setHitFlash(0.f);
     keepDefeatedVisible = false;
+    dissolve.reset();
 }
 
-void EnemyNode::_Process(float) {
-    bool visible = stats.alive() || keepDefeatedVisible;
+void EnemyNode::_Process(float dt) {
+    if (!stats.alive() && !keepDefeatedVisible) {
+        dissolve.start();
+        dissolve.update(dt);
+    }
+    bool visible = stats.alive() || keepDefeatedVisible || !dissolve.finished();
     body->setScale(visible ? Vector3(1, 1, 1) : Vector3());
-    if (!visible) { hpBar->setScale(Vector3()); return; }
+    if (!stats.alive()) { hpBar->setScale(Vector3()); return; }
     float ratio = static_cast<float>(stats.hp) / stats.maxHp;
     hpBar->setScale(Vector3(std::max(ratio, 0.001f) * 1.5f, 0.15f, 0.15f));
     Vector3 p = body->getPosition();
     hpBar->setPosition(Vector3(p.X, p.Y + 1.6f, p.Z));
+}
+
+void EnemyNode::render(GLuint shaderProgram, const glm::mat4& viewProjection) {
+    if (dissolve.finished()) return;
+    if (dissolveProgram == 0 || dissolve.progress() == 0.f) {
+        Node::render(shaderProgram, viewProjection);
+        return;
+    }
+    glUseProgram(dissolveProgram);
+    const glm::vec3 origin(body->getWorldTransform()[3]);
+    const glm::vec3 sun = ShadowMap::sunDirection();
+    const glm::mat4 lightVP = ShadowMap::sunMatrix();
+    glUniform3fv(glGetUniformLocation(dissolveProgram, "u_DissolveOrigin"), 1, &origin[0]);
+    glUniform1f(glGetUniformLocation(dissolveProgram, "u_DissolveProgress"), dissolve.progress());
+    glUniform1i(glGetUniformLocation(dissolveProgram, "u_DepthOnly"), shaderProgram == depthProgram);
+    glUniform3fv(glGetUniformLocation(dissolveProgram, "u_SunDir"), 1, &sun[0]);
+    glUniformMatrix4fv(glGetUniformLocation(dissolveProgram, "u_LightVP"), 1, GL_FALSE, &lightVP[0][0]);
+    glUniform1i(glGetUniformLocation(dissolveProgram, "u_ShadowMap"), 1);
+    glUniform1i(glGetUniformLocation(dissolveProgram, "u_Tex"), 0);
+    body->render(dissolveProgram, viewProjection);
+    glUseProgram(shaderProgram);
 }

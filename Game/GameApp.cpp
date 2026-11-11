@@ -17,6 +17,7 @@
 #include "EnemyNode.h"
 #include "ParticleNode.h"
 #include "ShadowMap.h"
+#include "DissolveShader.h"
 #include "GameApp.h"
 #include "SpawnLayout.h"
 #include <cmath>
@@ -28,6 +29,7 @@
 namespace {
 
     GLuint shaderProgram = 0;
+    GLuint dissolveProgram = 0;
     GLuint cubeVAO = 0;
     int cubeIndexCount = 36;
 
@@ -305,6 +307,7 @@ namespace {
 
         for (int i = 0; i < 3; ++i) {
             auto enemy = std::make_shared<EnemyNode>(cubeVAO, cubeIndexCount);
+            enemy->setDissolveProgram(dissolveProgram, shadowMap.program);
             worldScene->addChild(enemy);
             enemies.push_back(enemy);
         }
@@ -459,7 +462,8 @@ namespace {
                 playerMotion.hitTime = 0.3f;
                 hitBurst(player->getPosition(), Vector3(0.95f, 0.25f, 0.2f), 14, 1.f);
             }
-            if (battle.finished && !playerMotion.active() && !enemyMotion.active()) {
+            if (battle.finished && !playerMotion.active() && !enemyMotion.active()
+                && (!battle.playerWon || enemies[currentEnemy]->dissolveFinished())) {
                 if (battle.playerWon) {
                     kills++;
                     player->stats.mp = std::min(player->stats.maxMp, player->stats.mp + 3);
@@ -569,6 +573,7 @@ int runGame(int argc, char** argv) {
     try {
         initShaders();
         shadowMap.init();
+        dissolveProgram = loadDissolveProgram();
     }
     catch (const std::exception& error) {
         std::cerr << error.what() << std::endl;

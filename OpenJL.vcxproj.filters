@@ -65,6 +65,12 @@
     <ClInclude Include="Game\EnemyNode.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Game\DissolveState.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\DissolveShader.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
     <ClInclude Include="Game\HudNode.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -100,6 +106,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\player_shader.frag" />
+    <None Include="shaders\enemy_dissolve.vert" />
+    <None Include="shaders\enemy_dissolve.frag" />
     <None Include="shaders\outline.vert" />
     <None Include="shaders\outline.frag" />
     <None Include="shaders\player_rim.vert" />
