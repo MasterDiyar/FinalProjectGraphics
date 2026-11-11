@@ -3,7 +3,6 @@
 #include "../Modules/MeshNode.h"
 #include <array>
 
-// An encounter owns its visual anchor, model variants and health bar.
 class EnemyNode : public Node {
 public:
     Fighter stats;

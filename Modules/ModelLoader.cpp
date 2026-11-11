@@ -111,5 +111,6 @@ Model loadOBJ(const std::string& path) {
     glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
+
     return m;
 }

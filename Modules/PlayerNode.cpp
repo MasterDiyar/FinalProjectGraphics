@@ -47,7 +47,7 @@ GLuint PlayerNode::compileShader(GLenum type, const std::string& source) {
 
 void PlayerNode::initPlayerShaders() {
     try {
-        // Загрузка Toon шейдера (если используется)
+        /*
         std::string toonVertCode = loadShaderFile("shaders/player_shader.vert");
         std::string toonFragCode = loadShaderFile("shaders/player_shader.frag");
 
@@ -58,7 +58,7 @@ void PlayerNode::initPlayerShaders() {
         glAttachShader(toonShaderProgram, tfs);
         glLinkProgram(toonShaderProgram);
         glDeleteShader(tvs);
-        glDeleteShader(tfs);
+        glDeleteShader(tfs);*/
 
         // Загрузка Rim Lighting шейдера
         std::string rimVertCode = loadShaderFile("shaders/player_rim.vert");
@@ -85,7 +85,7 @@ void PlayerNode::loadModel(const std::string& objPath, const std::string& textur
         bodyNode = std::make_shared<MeshNode>(heroModel.vao, heroModel.indexCount);
         bodyNode->textureId = loadTexture(texturePath);
         bodyNode->color = Vector3(1.0f, 1.0f, 1.0f);
-        bodyNode->setScale(Vector3(0.01f, 0.01f, 0.01f));
+        //bodyNode->setScale(Vector3(0.01f, 0.01f, 0.01f));
     }
     else {
         bodyNode = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
@@ -142,25 +142,37 @@ void PlayerNode::handleMovement(const bool keys[256], float dt, float cameraAngl
     setPosition(p);
 }
 
-void PlayerNode::renderWithRim(GLuint defaultShaderProgram, const glm::mat4& vpMatrix, const glm::vec3& cameraPos) {
-    if (rimShaderProgram == 0) {
-        Node::render(defaultShaderProgram, vpMatrix);
-        return;
+void PlayerNode::render(GLuint shaderProgram, const glm::mat4& viewProjMatrix) {
+    GLuint activeShader = (rimShaderProgram != 0) ? rimShaderProgram : shaderProgram;
+
+    glUseProgram(activeShader);
+
+    if (activeShader == rimShaderProgram) {
+        glUniform3f(glGetUniformLocation(rimShaderProgram, "u_RimColor"), 0.1f, 0.35f, 0.8f);
+        glUniform1f(glGetUniformLocation(rimShaderProgram, "u_RimPower"), 4.5f);
+        glUniform1f(glGetUniformLocation(rimShaderProgram, "u_RimIntensity"), 0.21f);
+        glUniform1f(glGetUniformLocation(rimShaderProgram, "u_HitFlash"), getHitFlash());
+        glUniform1f(glGetUniformLocation(rimShaderProgram, "u_Alpha"), 1.0f);
     }
 
-    glUseProgram(rimShaderProgram);
+    Node::render(activeShader, viewProjMatrix);
+    glUseProgram(shaderProgram);
+}
 
-    // 1. Позиция камеры для расчета направления взгляда
-    glUniform3fv(glGetUniformLocation(rimShaderProgram, "u_ViewPos"), 1, glm::value_ptr(cameraPos));
+void PlayerNode::renderWithRim(GLuint defaultShaderProgram, const glm::mat4& vpMatrix, const glm::vec3& cameraPos) {
+    GLuint shaderToUse = (rimShaderProgram != 0) ? rimShaderProgram : defaultShaderProgram;
 
-    // 2. Настройки свечения Рим-света (можно вынести в конструктор)
-    glUniform3f(glGetUniformLocation(rimShaderProgram, "u_RimColor"), 0.2f, 0.6f, 1.0f); // Голубой неоновый цвет
-    glUniform1f(glGetUniformLocation(rimShaderProgram, "u_RimPower"), 3.0f);                // Ширина контура
-    glUniform1f(glGetUniformLocation(rimShaderProgram, "u_RimIntensity"), 1.8f);            // Интенсивность
+    glUseProgram(shaderToUse);
 
-    // 3. Передаем общий статус урона (HitFlash)
-    glUniform1f(glGetUniformLocation(rimShaderProgram, "u_HitFlash"), getHitFlash());
-    glUniform1f(glGetUniformLocation(rimShaderProgram, "u_Alpha"), 1.0f);
+    if (shaderToUse == rimShaderProgram) {
+        glUniform3fv(glGetUniformLocation(rimShaderProgram, "u_ViewPos"), 1, glm::value_ptr(cameraPos));
+        glUniform3f(glGetUniformLocation(rimShaderProgram, "u_RimColor"), 0.3f, 0.7f, 1.0f); // Чуть мягче цвет
+        glUniform1f(glGetUniformLocation(rimShaderProgram, "u_RimPower"), 4.5f);              // Сделать контур тоньше (было 3.0)
+        glUniform1f(glGetUniformLocation(rimShaderProgram, "u_RimIntensity"), 1.0f);          // Уменьшить яркость (было 1.8)F
+        glUniform1f(glGetUniformLocation(rimShaderProgram, "u_HitFlash"), getHitFlash());
+        glUniform1f(glGetUniformLocation(rimShaderProgram, "u_Alpha"), 1.0f);
+    }
 
-    Node::render(rimShaderProgram, vpMatrix);
+    Node::render(shaderToUse, vpMatrix);
+
 }

@@ -6,7 +6,6 @@
 #include <glad/glad.h>
 #include <memory>
 #include <string>
-
 class PlayerNode : public Node {
 private:
     std::shared_ptr<MeshNode> bodyNode;
@@ -30,6 +29,7 @@ public:
 
     std::shared_ptr<MeshNode> getBody() const { return bodyNode; }
 
-    // Передаем viewPos (позицию камеры) для корректного расчета Rim Lighting
+    void render(GLuint shaderProgram, const glm::mat4& viewProjMatrix) override;
+
     void renderWithRim(GLuint defaultShaderProgram, const glm::mat4& vpMatrix, const glm::vec3& cameraPos);
 };

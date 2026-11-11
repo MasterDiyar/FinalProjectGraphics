@@ -27,6 +27,10 @@ protected:
 public:
     virtual ~Node() = default;
 
+    int ChildCount() {
+        return static_cast<int>(children.size());
+    }
+
     virtual void _Process(float deltaTime) {
     }
 

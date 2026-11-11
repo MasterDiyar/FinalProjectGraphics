@@ -32,7 +32,7 @@ namespace {
     int cubeIndexCount = 36;
 
     std::shared_ptr<Node> rootScene;
-    std::shared_ptr<Node> worldScene; // everything that casts shadows; the HUD stays outside
+    std::shared_ptr<Node> worldScene; 
     ShadowMap shadowMap;
     GameState state = GameState::Explore;
     Battle battle;
@@ -51,16 +51,14 @@ namespace {
     bool paused = false;
     int lastTime = 0;
     int windowWidth = 800, windowHeight = 600;
-    int mouseX = -1, mouseY = -1; // last known mouse position, -1 when outside the window
+    int mouseX = -1, mouseY = -1;
     constexpr float arenaLimit = 9.5f;
     glm::vec3 cameraEye(0.f, 7.f, 9.f);
     glm::vec3 cameraTarget(0.f);
-    float cameraAngle = 0.0f; // Угол поворота камеры на Q и E
-    float cameraShake = 0.f, shakeTime = 0.f; // hit shake strength (0-1) and its phase
+    float cameraAngle = 0.0f; 
+    float cameraShake = 0.f, shakeTime = 0.f; 
     glm::vec3 shakeOffset(0.f);
 
-    // World-space position of a node. The hero's body is a child of PlayerNode while enemy
-    // bodies sit directly in the scene, so their local getPosition() values are not comparable.
     Vector3 worldPosition(const std::shared_ptr<MeshNode>& node) {
         const glm::mat4 m = node->getWorldTransform();
         return Vector3(m[3].x, m[3].y, m[3].z);
@@ -191,16 +189,44 @@ namespace {
 
     void initCube() {
         float vertices[] = {
-            -0.5f, -0.5f, -0.5f,   0.5f, -0.5f, -0.5f,   0.5f,  0.5f, -0.5f,  -0.5f,  0.5f, -0.5f,
-            -0.5f, -0.5f,  0.5f,   0.5f, -0.5f,  0.5f,   0.5f,  0.5f,  0.5f,  -0.5f,  0.5f,  0.5f,
+            -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 0.0f,
+             0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 1.0f,
+
+            -0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   0.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   1.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   1.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   0.0f, 1.0f,
+
+            -0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,   1.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,   1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,   0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,   0.0f, 0.0f,
+
+             0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,   1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f,   1.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,   0.0f, 1.0f,
+             0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f,   0.0f, 0.0f,
+
+             -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,   0.0f, 1.0f,
+              0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,   1.0f, 1.0f,
+              0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,   1.0f, 0.0f,
+             -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,   0.0f, 0.0f,
+
+             -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 1.0f,
+              0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   1.0f, 1.0f,
+              0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,   1.0f, 0.0f,
+             -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 0.0f
         };
+
         unsigned int indices[] = {
-            0, 1, 2,  2, 3, 0,
-            4, 5, 6,  6, 7, 4,
-            4, 5, 1,  1, 0, 4,
-            7, 6, 2,  2, 3, 7,
-            4, 7, 3,  3, 0, 4,
-            5, 6, 2,  2, 1, 5
+            0,  1,  2,   2,  3,  0,    
+            4,  5,  6,   6,  7,  4,    
+            8,  9, 10,  10, 11,  8,    
+           12, 13, 14,  14, 15, 12,   
+           16, 17, 18,  18, 19, 16,    
+           20, 21, 22,  22, 23, 20     
         };
 
         GLuint VBO, EBO;
@@ -214,8 +240,15 @@ namespace {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+
         glBindVertexArray(0);
     }
 
@@ -555,6 +588,9 @@ int runGame(int argc, char** argv) {
     glutEntryFunc(mouseEntry);
     lastTime = glutGet(GLUT_ELAPSED_TIME);
     glutTimerFunc(0, timer, 0);
+
+    std::cout << rootScene->ChildCount()<<std::endl;
+    std::cout << worldScene->ChildCount() << std::endl;
 
     glutMainLoop();
     return 0;

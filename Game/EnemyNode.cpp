@@ -17,7 +17,7 @@ const EnemyType enemyTypes[] = {
 }
 
 EnemyNode::EnemyNode(GLuint vao, int indexCount) : cubeVao(vao), cubeIndexCount(indexCount) {
-    body = std::make_shared<MeshNode>(cubeVao, 0);
+    body = std::make_shared<MeshNode>(0, 0);
     buildModels();
     hpBar = std::make_shared<MeshNode>(cubeVao, cubeIndexCount);
     hpBar->color = Vector3(0.9f, 0.1f, 0.1f);

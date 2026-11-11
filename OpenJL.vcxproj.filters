@@ -45,10 +45,10 @@
     <ClCompile Include="Modules\ArenaNode.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Modules\MeshNode.cpp">
+    <ClCompile Include="Modules\PlayerNode.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Modules\PlayerNode.cpp">
+    <ClCompile Include="Modules\MeshNode.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
