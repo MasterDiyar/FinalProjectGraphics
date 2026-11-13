@@ -16,6 +16,7 @@ public:
     void setDissolveProgram(GLuint effect, GLuint depth) { dissolveProgram = effect; depthProgram = depth; }
     bool dissolveFinished() const { return dissolve.finished(); }
     float dissolveProgress() const { return dissolve.progress(); }
+    std::shared_ptr<const Node> animatedModel() const { return models[activeType]; }
     void render(GLuint shaderProgram, const glm::mat4& viewProjection) override;
 
 private:
@@ -23,6 +24,8 @@ private:
     int cubeIndexCount;
     bool keepDefeatedVisible = false;
     DissolveState dissolve;
+    int activeType = 0;
+    float idleTime = 0.f;
     GLuint dissolveProgram = 0, depthProgram = 0;
     std::shared_ptr<MeshNode> hpBar;
     std::array<std::shared_ptr<Node>, 3> models;

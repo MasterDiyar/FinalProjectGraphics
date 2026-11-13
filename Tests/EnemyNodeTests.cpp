@@ -18,15 +18,26 @@ int main() {
         check(enemy->stats.hp == enemy->stats.maxHp && enemy->stats.alive(), "Spawn restores health");
         check(enemy->body->getScale().X == 1.f, "Alive model is visible");
         check(enemy->body->getPosition().X == 6.f, "Body keeps encounter position");
+        auto before = enemy->animatedModel()->getLocalTransform();
+        enemy->body->setVisualOffset(Vector3(0.2f, 0, 0));
+        scene->update(0.2f);
+        auto animated = enemy->animatedModel()->getLocalTransform();
+        check(animated != before, "Every mob type has a continuous idle animation");
+        check(enemy->body->getLocalTransform()[3].x == 6.2f, "Idle preserves combat offsets and encounter coordinates");
+        scene->update(0.f);
+        check(enemy->animatedModel()->getLocalTransform() == animated, "Pause freezes idle animation");
+        enemy->body->setVisualOffset(Vector3());
     }
     scene->setPosition(Vector3(2, 0, 0));
     scene->update(0.f);
     check(enemy->body->getWorldTransform()[3].x == 8.f, "Mob model participates in the scene hierarchy");
     enemy->stats.hp = 0;
+    auto deathPose = enemy->animatedModel()->getLocalTransform();
     enemy->keepVisibleForFeedback(true);
     scene->update(0.f);
     check(enemy->body->getScale().X == 1.f, "Final hit remains visible during feedback");
     scene->update(1.f);
+    check(enemy->animatedModel()->getLocalTransform() == deathPose, "Death freezes idle pose for dissolve");
     check(enemy->dissolveProgress() == 0.f, "Dissolve waits for final-hit feedback");
     enemy->keepVisibleForFeedback(false);
     scene->update(0.f);

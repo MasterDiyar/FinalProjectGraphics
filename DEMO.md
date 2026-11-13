@@ -2,6 +2,13 @@
 
 ## Before the presentation
 
+For the continuous-animation requirement, stand near a living mob without
+pressing any action: slime squash/stretch (1.2 s loop), goblin sway (1.7 s), and
+golem breathing (2.4 s) continue during exploration and waiting turns. Press P
+to freeze/resume them. On defeat, the mob holds its current pose and dissolves.
+`EnemyNode::_Process` drives the sine loops with scene delta time; only model
+children are transformed, so the encounter anchor stays fixed.
+
 Run `run-game.cmd --check` for a Debug x64 build and all regression checks.
 Then double-click `run-game.cmd` to launch. Run the checks on the actual demo
 computer too; they do not verify its graphics driver or the interactive UI.

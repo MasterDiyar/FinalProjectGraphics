@@ -1,6 +1,7 @@
 #include "EnemyNode.h"
 #include <algorithm>
 #include "ShadowMap.h"
+#include <cmath>
 
 namespace {
 struct EnemyType {
@@ -79,10 +80,17 @@ void EnemyNode::buildModels() {
 
 void EnemyNode::spawn(int typeIndex, float difficulty, Vector3 position) {
     typeIndex = std::clamp(typeIndex, 0, 2);
+    activeType = typeIndex;
+    // Position-dependent phases keep different mobs from moving in lockstep.
+    idleTime = std::fmod(std::abs(position.X * 0.37f + position.Z * 0.61f), 1.f);
     const EnemyType& type = enemyTypes[typeIndex];
     int hp = static_cast<int>(type.hp * difficulty);
     stats = Fighter{type.name, hp, hp, static_cast<int>(type.atk * difficulty), type.def, 0, 0};
-    for (int i = 0; i < 3; ++i) models[i]->setScale(i == typeIndex ? Vector3(1, 1, 1) : Vector3());
+    for (int i = 0; i < 3; ++i) {
+        models[i]->setPosition(Vector3());
+        models[i]->setRotation(Vector3());
+        models[i]->setScale(i == typeIndex ? Vector3(1, 1, 1) : Vector3());
+    }
     body->setPosition(position);
     body->setVisualOffset(Vector3());
     body->setHitFlash(0.f);
@@ -91,6 +99,24 @@ void EnemyNode::spawn(int typeIndex, float difficulty, Vector3 position) {
 }
 
 void EnemyNode::_Process(float dt) {
+    if (stats.alive() && dt > 0.f) {
+        const float period = activeType == 0 ? 1.2f : activeType == 1 ? 1.7f : 2.4f;
+        idleTime = std::fmod(idleTime + dt, period);
+        float wave = std::sin(idleTime * 6.2831853f / period);
+        auto& model = models[activeType];
+        if (activeType == 0) {
+            float height = 1.f - 0.10f * wave;
+            model->setScale(Vector3(1.f + 0.06f * wave, height, 1.f + 0.06f * wave));
+            model->setPosition(Vector3(0, 0.5f * (height - 1.f), 0));
+        } else if (activeType == 1) {
+            model->setRotation(Vector3(0, 0, 2.5f * wave));
+            model->setPosition(Vector3(0, 0.025f * (1.f + wave), 0));
+        } else {
+            float height = 1.f + 0.025f * wave;
+            model->setScale(Vector3(1.f, height, 1.f));
+            model->setPosition(Vector3(0, 0.5f * (height - 1.f), 0));
+        }
+    }
     if (!stats.alive() && !keepDefeatedVisible) {
         dissolve.start();
         dissolve.update(dt);

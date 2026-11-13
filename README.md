@@ -64,6 +64,12 @@ not used by the current window/input implementation. No engine is required.
 
 ## Code structure
 
+Living mobs animate continuously through `EnemyNode::_Process`: slimes squash
+and stretch, goblins gently sway, and golems slowly breathe. Animation affects
+only the selected model subtree, leaving the combat anchor, encounter position
+and HP bar stable. P freezes the clock; death holds the final pose for dissolve;
+respawn resets transforms. No external animation asset is required.
+
 Enemy defeat now uses a dedicated GLSL dissolve effect with an ember edge and
 matching shadow removal. See [shader explanation and demo steps](shaders/README.md).
 Run `run-game.cmd --check-gl` for regression checks plus real-driver GLSL tests.
