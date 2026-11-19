@@ -98,7 +98,6 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
     }
     else {
         heading = "EXPLORE THE ARENA";
-        message = "WASD TO MOVE, Q/E TO ROTATE CAMERA. TOUCH AN ENEMY TO FIGHT.";
         hud.rect(18, 550, 764, 10, glm::vec3(0.16f));
         if (model.total != 0)
             hud.rect(18, 550, 764.f * static_cast<float>(cleared) / model.total, 10,

@@ -144,7 +144,7 @@ ArenaNode::ArenaNode(unsigned int cubeVAO, int cubeIndexCount)
     }
 
     floorNode = std::make_shared<MeshNode>(floorVAO, 6);
-    floorNode->textureId = loadTexture("assets/generated/grass.png");
+    floorNode->textureId = loadTexture("assets/grass.png");
     floorNode->color = Vector3(1.0f, 1.0f, 1.0f);
     floorNode->setScale(Vector3(20.0f, 1.0f, 20.0f));
     floorNode->setPosition(Vector3(0.0f, -0.6f, 0.0f));
@@ -185,7 +185,7 @@ void ArenaNode::decorateArena() {
         }
     }
 
-    unsigned int wallTex = loadTexture("assets/generated/wall.png");
+    unsigned int wallTex = loadTexture("assets/wall.png");
 
     float heightWall1 = 0.95f;
     float heightWall2 = 0.82f;

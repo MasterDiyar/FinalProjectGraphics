@@ -3,7 +3,6 @@
 #include "Hud.h"
 #include "HudState.h"
 
-// Add last to the root scene so the screen-space pass follows world geometry.
 class HudNode : public Node {
 public:
     void init() { hud.init(); }

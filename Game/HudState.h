@@ -2,7 +2,6 @@
 #include "Battle.h"
 #include <cstddef>
 
-// A value snapshot: HUD rendering never owns or mutates combat state.
 struct HudState {
     GameState state = GameState::Explore;
     Fighter player;
@@ -12,7 +11,7 @@ struct HudState {
     bool paused = false, resolving = false, playerTurn = true, finished = false;
     bool help = false, rim = true, dissolve = true, shadows = true, lowQuality = false, showcase = false;
     float fps = 0.f;
-    int hover = -1; // index of the enabled button under the mouse, or -1
+    int hover = -1; 
     std::string log;
 
     bool actionEnabled(int index) const {
@@ -23,7 +22,6 @@ struct HudState {
             && !resolving && (index != 1 || player.mp >= 3);
     }
 
-    // Index (0-2) of the enabled button at a window position, or -1.
     int buttonAt(int x, int y, int width, int height) const {
         if (width <= 0 || height <= 0) return -1;
         float ux = x * 800.f / width, uy = y * 600.f / height;

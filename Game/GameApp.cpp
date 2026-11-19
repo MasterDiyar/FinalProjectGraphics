@@ -607,8 +607,6 @@ int runGame(int argc, char** argv) {
     lastTime = glutGet(GLUT_ELAPSED_TIME);
     glutTimerFunc(0, timer, 0);
 
-    std::cout << rootScene->ChildCount()<<std::endl;
-    std::cout << worldScene->ChildCount() << std::endl;
 
     glutMainLoop();
     return 0;

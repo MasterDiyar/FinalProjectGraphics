@@ -31,7 +31,7 @@ static void parseVertex(const std::string& tok, int& v, int& t, int& n) {
 Model loadOBJ(const std::string& path) {
     std::ifstream file(path);
     if (!file) {
-        std::cerr << "OBJ: cannot open " << path << "\n";
+        //std::cerr << "OBJ: cannot open " << path << "\n";
         return {};
     }
 
