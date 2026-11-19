@@ -15,8 +15,11 @@ private:
     glm::vec3 cameraPosition{0.f};
     GLuint depthProgram = 0;
     bool rimEnabled = true;
+    bool usingFallback = false;
+
     GLuint toonShaderProgram = 0;
     GLuint rimShaderProgram = 0;
+    GLuint sierpinskiShaderProgram = 0;
 
     void initPlayerShaders();
     GLuint compileShader(GLenum type, const std::string& source);

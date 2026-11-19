@@ -40,6 +40,5 @@ void MeshNode::render(unsigned int shaderProgram, const glm::mat4& viewProjMatri
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
-    // Рендерим дочерние узлы
     Node::render(shaderProgram, viewProjMatrix);
 }
