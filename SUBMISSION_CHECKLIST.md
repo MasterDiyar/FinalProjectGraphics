@@ -22,9 +22,9 @@ Instructor: Saleshova Sabina. Free-choice topic: **Monster Clash**.
 
 ## Required before upload
 
-- Record a 60–120 second demo showing gameplay **and code**, make it public on
-  YouTube and put its real URL in `output/pdf/report_metadata.json`; regenerate
-  the report with `output/pdf/build_report.py`. A placeholder is not a valid URL.
+- Demonstration link supplied and included in the report:
+  https://youtu.be/-plQpir5YrU. Check playback without signing in before upload;
+  access, duration and video contents could not be independently verified here.
 - Practise the supplied five-minute presentation (output/pdf/Monster_Clash_Presentation.pdf).
 - Upload presentation PDF, report PDF and source ZIP as three separate files.
 - Run on the actual lab PC. Use G if FPS falls below 30; local benchmark results

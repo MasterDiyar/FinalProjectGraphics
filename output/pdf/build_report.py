@@ -98,7 +98,7 @@ story.append(Loop())
 add('Figure 1. Implemented gameplay loop. The next floor is entered only after all enemies are defeated and an upgrade is selected.','small')
 h('Demonstration video')
 if META.get('video_url'):
-    u=escape(META['video_url']); add(f'Public YouTube demonstration: <link href="{u}" color="#000000">{u}</link>')
+    u=escape(META['video_url']); add(f'YouTube demonstration: <link href="{u}" color="#000000">{u}</link>')
 else:
     add('The public YouTube link will be added once the team has uploaded the demonstration video.')
 
@@ -224,7 +224,7 @@ table(['Requirement','Status and evidence'],[
  ['Names, topic and status','Done. Team names, Monster Clash, floor/kills, effect states and FPS are on screen.'],
  ['Licensed active assets','Done. Procedural cube models and original CC0 textures. Older unused images are excluded from the source ZIP.'],
  ['Continuous animation','Done. Separate slime, goblin and golem loops; P freezes them.'],
- ['Report, source and video','Partial. Report and source are supplied; the public demonstration video has not yet been uploaded.'],
+ ['Report, source and video','Done. Report and source are supplied; the YouTube demonstration link is included in Section 1.' if META.get('video_url') else 'Partial. Report and source are supplied; the public demonstration video has not yet been uploaded.'],
 ],[145,338])
 
 page('10. Controls and measured performance')
