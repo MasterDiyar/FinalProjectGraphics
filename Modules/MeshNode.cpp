@@ -7,7 +7,6 @@
 MeshNode::MeshNode(unsigned int vao, int indexCount) : vao(vao), indexCount(indexCount) {}
 
 void MeshNode::render(unsigned int shaderProgram, const glm::mat4& viewProjMatrix) {
-    // Container meshes (such as a mob's animation anchor) have no geometry.
     if (vao == 0 || indexCount <= 0) {
         Node::render(shaderProgram, viewProjMatrix);
         return;
@@ -36,6 +35,5 @@ void MeshNode::render(unsigned int shaderProgram, const glm::mat4& viewProjMatri
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
-    // Рендерим дочерние узлы
     Node::render(shaderProgram, viewProjMatrix);
 }

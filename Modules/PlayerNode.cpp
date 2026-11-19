@@ -47,20 +47,6 @@ GLuint PlayerNode::compileShader(GLenum type, const std::string& source) {
 
 void PlayerNode::initPlayerShaders() {
     try {
-        /*
-        std::string toonVertCode = loadShaderFile("shaders/player_shader.vert");
-        std::string toonFragCode = loadShaderFile("shaders/player_shader.frag");
-
-        GLuint tvs = compileShader(GL_VERTEX_SHADER, toonVertCode);
-        GLuint tfs = compileShader(GL_FRAGMENT_SHADER, toonFragCode);
-        toonShaderProgram = glCreateProgram();
-        glAttachShader(toonShaderProgram, tvs);
-        glAttachShader(toonShaderProgram, tfs);
-        glLinkProgram(toonShaderProgram);
-        glDeleteShader(tvs);
-        glDeleteShader(tfs);*/
-
-        // Загрузка Rim Lighting шейдера
         std::string rimVertCode = loadShaderFile("shaders/player_rim.vert");
         std::string rimFragCode = loadShaderFile("shaders/player_rim.frag");
 
@@ -85,7 +71,6 @@ void PlayerNode::loadModel(const std::string& objPath, const std::string& textur
         bodyNode = std::make_shared<MeshNode>(heroModel.vao, heroModel.indexCount);
         bodyNode->textureId = loadTexture(texturePath);
         bodyNode->color = Vector3(1.0f, 1.0f, 1.0f);
-        //bodyNode->setScale(Vector3(0.01f, 0.01f, 0.01f));
     }
     else {
         bodyNode = std::make_shared<MeshNode>(cubeVAO, cubeIndexCount);
@@ -157,22 +142,4 @@ void PlayerNode::render(GLuint shaderProgram, const glm::mat4& viewProjMatrix) {
 
     Node::render(activeShader, viewProjMatrix);
     glUseProgram(shaderProgram);
-}
-
-void PlayerNode::renderWithRim(GLuint defaultShaderProgram, const glm::mat4& vpMatrix, const glm::vec3& cameraPos) {
-    GLuint shaderToUse = (rimShaderProgram != 0) ? rimShaderProgram : defaultShaderProgram;
-
-    glUseProgram(shaderToUse);
-
-    if (shaderToUse == rimShaderProgram) {
-        glUniform3fv(glGetUniformLocation(rimShaderProgram, "u_ViewPos"), 1, glm::value_ptr(cameraPos));
-        glUniform3f(glGetUniformLocation(rimShaderProgram, "u_RimColor"), 0.3f, 0.7f, 1.0f); // Чуть мягче цвет
-        glUniform1f(glGetUniformLocation(rimShaderProgram, "u_RimPower"), 4.5f);              // Сделать контур тоньше (было 3.0)
-        glUniform1f(glGetUniformLocation(rimShaderProgram, "u_RimIntensity"), 1.0f);          // Уменьшить яркость (было 1.8)F
-        glUniform1f(glGetUniformLocation(rimShaderProgram, "u_HitFlash"), getHitFlash());
-        glUniform1f(glGetUniformLocation(rimShaderProgram, "u_Alpha"), 1.0f);
-    }
-
-    Node::render(shaderToUse, vpMatrix);
-
 }

@@ -12,8 +12,11 @@ private:
     float moveSpeed = 4.0f;
     float arenaLimit = 9.5f;
 
+    bool usingFallback = false;
+
     GLuint toonShaderProgram = 0;
     GLuint rimShaderProgram = 0;
+    GLuint sierpinskiShaderProgram = 0;
 
     void initPlayerShaders();
     GLuint compileShader(GLenum type, const std::string& source);
