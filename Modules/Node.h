@@ -83,6 +83,9 @@ public:
     }
 
     virtual void render(GLuint shaderProgram, const glm::mat4& viewProjMatrix) {
+        // Model variants are hidden by scaling their parent to zero.
+        // Skip the subtree before its meshes build singular normal matrices.
+        if (scale.X == 0.f || scale.Y == 0.f || scale.Z == 0.f) return;
         for (auto& child : children) {
             child->render(shaderProgram, viewProjMatrix);
         }

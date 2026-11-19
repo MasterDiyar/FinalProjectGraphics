@@ -1,4 +1,5 @@
 #include "../Game/EnemyNode.h"
+#include "../Modules/TriangleWinding.h"
 #include <cstdlib>
 #include <iostream>
 
@@ -7,6 +8,22 @@ void check(bool condition, const char* message) {
 }
 
 int main() {
+    float triangle[] = {0,0,0, 0,0,-1, 0,0,
+                        1,0,0, 0,0,-1, 1,0,
+                        0,1,0, 0,0,-1, 0,1};
+    unsigned int indices[] = {0,1,2};
+    orientTriangles(triangle, indices, 3);
+    check(indices[1] == 2 && indices[2] == 1, "Culling winding agrees with outward normals");
+    orientTriangles(triangle, indices, 3);
+    check(indices[1] == 2 && indices[2] == 1, "Correct winding is not reversed twice");
+    auto hidden = std::make_shared<MeshNode>(123, 36);
+    hidden->setScale(Vector3());
+    hidden->render(0, glm::mat4(1.f)); // Must skip every GL call without a context.
+    auto hiddenParent = std::make_shared<Node>();
+    auto hiddenChild = std::make_shared<MeshNode>(123, 36);
+    hiddenParent->addChild(hiddenChild);
+    hiddenParent->setScale(Vector3());
+    hiddenParent->render(0, glm::mat4(1.f)); // Zero-scale model variant skips its visible child too.
     // Constructors and update paths need no GL context; only render uses GL.
     auto scene = std::make_shared<Node>();
     auto enemy = std::make_shared<EnemyNode>(0, 36);

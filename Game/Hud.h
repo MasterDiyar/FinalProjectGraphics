@@ -94,6 +94,7 @@ public:
     void begin(GLuint shader) {
         program = shader;
         glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE); // Screen-space triangles use a top-left origin.
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glUseProgram(program);
@@ -164,5 +165,6 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
     }
 };

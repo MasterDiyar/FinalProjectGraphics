@@ -132,11 +132,12 @@ void EnemyNode::_Process(float dt) {
 
 void EnemyNode::render(GLuint shaderProgram, const glm::mat4& viewProjection) {
     if (dissolve.finished()) return;
-    if (dissolveProgram == 0 || dissolve.progress() == 0.f) {
+    if (!dissolveEnabled || dissolveProgram == 0 || dissolve.progress() == 0.f) {
         Node::render(shaderProgram, viewProjection);
         return;
     }
     glUseProgram(dissolveProgram);
+    glUniform1i(glGetUniformLocation(dissolveProgram, "u_Shadows"), ShadowMap::enabled);
     const glm::vec3 origin(body->getWorldTransform()[3]);
     const glm::vec3 sun = ShadowMap::sunDirection();
     const glm::mat4 lightVP = ShadowMap::sunMatrix();

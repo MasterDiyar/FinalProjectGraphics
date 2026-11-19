@@ -12,6 +12,9 @@ private:
     float moveSpeed = 4.0f;
     float arenaLimit = 9.5f;
 
+    glm::vec3 cameraPosition{0.f};
+    GLuint depthProgram = 0;
+    bool rimEnabled = true;
     bool usingFallback = false;
 
     GLuint toonShaderProgram = 0;
@@ -22,6 +25,7 @@ private:
     GLuint compileShader(GLenum type, const std::string& source);
 
 public:
+    void configureRendering(glm::vec3 camera, GLuint depth, bool rim) { cameraPosition = camera; depthProgram = depth; rimEnabled = rim; }
     Fighter stats{ "Hero", 40, 40, 9, 2, 10, 10 };
 
     PlayerNode(unsigned int cubeVAO, int cubeIndexCount);

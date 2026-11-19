@@ -118,5 +118,21 @@ void HudNode::render(GLuint shaderProgram, const glm::mat4&) {
         hud.centerText(286, "PRESS P TO CONTINUE", glm::vec3(0.94f));
         hud.centerText(316, "YOUR RUN IS ON HOLD", glm::vec3(0.65f, 0.75f, 0.85f));
     }
+    hud.rect(0, 114, 800, 37, kPanel, 0.9f);
+    hud.text(12, 118, "AIBYN SAMAT / DIYAR SEKEZHANOV / DIAS ZHAKIN", glm::vec3(0.9f), 1.f);
+    std::string effects = std::string("R RIM ") + (model.rim ? "ON" : "OFF") + " / T DISSOLVE " + (model.dissolve ? "ON" : "OFF")
+        + " / B SHADOW " + (model.shadows ? "ON" : "OFF") + " / FPS " + std::to_string(int(model.fps));
+    hud.text(12, 134, effects + " / H HELP", kAccent, 1.f);
+    if (model.showcase) hud.centerText(165, "SHADER PREVIEW - F2 TO RETURN TO GAME", kGold, 1.5f);
+    if (model.help) {
+        hud.panel(60, 180, 680, 250, kPanel, kAccent);
+        hud.text(80, 198, "MONSTER CLASH - CONTROLS", kAccent);
+        const char* lines[] = {"WASD MOVE / Q E ORBIT CAMERA", "1 ATTACK / 2 SKILL / 3 DEFEND OR UPGRADE",
+            "MOUSE CLICK ACTION BUTTON / SPACE RESTART AFTER DEFEAT", "P FREEZE GAME AND ANIMATION / H OR F1 HELP",
+            "R RIM / T DISSOLVE / B SHADOWS: ON-OFF COMPARISON", "J L ROTATE SUN / G LOW QUALITY: NO SHADOW PASS",
+            "F2 LOOPING DISSOLVE PREVIEW / GOAL: CLEAR FLOORS"};
+        for (int i = 0; i < 7; ++i) hud.text(80, 237.f+i*24.f, lines[i], glm::vec3(0.95f), 1.f);
+        hud.text(80, 410, model.lowQuality ? "LOW QUALITY / SHADOWS OPTIONAL" : "SHADOW QUALITY: 2048", kGold, 1.f);
+    }
     hud.end();
 }

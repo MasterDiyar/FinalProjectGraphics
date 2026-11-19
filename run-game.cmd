@@ -2,8 +2,8 @@
 setlocal EnableExtensions DisableDelayedExpansion
 pushd "%~dp0" || exit /b 1
 
-if not "%~1"=="" if /i not "%~1"=="--check" if /i not "%~1"=="--check-gl" (
-    echo Usage: run-game.cmd [--check or --check-gl]
+if not "%~1"=="" if /i not "%~1"=="--check" if /i not "%~1"=="--check-gl" if /i not "%~1"=="--benchmark" (
+    echo Usage: run-game.cmd [--check or --check-gl or --benchmark]
     popd
     exit /b 2
 )
@@ -27,7 +27,7 @@ if errorlevel 1 goto failed
 if /i "%~1"=="--check" goto check
 if /i "%~1"=="--check-gl" goto check
 echo Starting Monster Clash. WASD: move, 1/2/3: actions, P: pause.
-"x64\Debug\OpenJL.exe"
+"x64\Debug\OpenJL.exe" %1
 if errorlevel 1 goto failed
 goto success
 

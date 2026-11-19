@@ -58,6 +58,13 @@ void PlayerNode::initPlayerShaders() {
         glLinkProgram(rimShaderProgram);
         glDeleteShader(rvs);
         glDeleteShader(rfs);
+        GLint linked = GL_FALSE;
+        glGetProgramiv(rimShaderProgram, GL_LINK_STATUS, &linked);
+        if (!linked) {
+            char log[4096] = {}; glGetProgramInfoLog(rimShaderProgram, sizeof(log), nullptr, log);
+            glDeleteProgram(rimShaderProgram); rimShaderProgram = 0;
+            throw std::runtime_error(std::string("Rim shader link failed: ") + log);
+        }
     }
     catch (const std::exception& e) {
         std::cerr << "Shader loading error: " << e.what() << std::endl;
@@ -128,11 +135,12 @@ void PlayerNode::handleMovement(const bool keys[256], float dt, float cameraAngl
 }
 
 void PlayerNode::render(GLuint shaderProgram, const glm::mat4& viewProjMatrix) {
-    GLuint activeShader = (rimShaderProgram != 0) ? rimShaderProgram : shaderProgram;
+    GLuint activeShader = (rimEnabled && shaderProgram != depthProgram && rimShaderProgram != 0) ? rimShaderProgram : shaderProgram;
 
     glUseProgram(activeShader);
 
     if (activeShader == rimShaderProgram) {
+        glUniform3fv(glGetUniformLocation(rimShaderProgram, "u_ViewPos"), 1, glm::value_ptr(cameraPosition));
         glUniform3f(glGetUniformLocation(rimShaderProgram, "u_RimColor"), 0.1f, 0.35f, 0.8f);
         glUniform1f(glGetUniformLocation(rimShaderProgram, "u_RimPower"), 4.5f);
         glUniform1f(glGetUniformLocation(rimShaderProgram, "u_RimIntensity"), 0.21f);

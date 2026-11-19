@@ -7,6 +7,11 @@
 MeshNode::MeshNode(unsigned int vao, int indexCount) : vao(vao), indexCount(indexCount) {}
 
 void MeshNode::render(unsigned int shaderProgram, const glm::mat4& viewProjMatrix) {
+    // Hidden pooled particles and health bars must not issue draws or invert a
+    // singular normal matrix. Children inherit this zero scale as well.
+    const Vector3 scale = getScale();
+    if (scale.X == 0.f || scale.Y == 0.f || scale.Z == 0.f) return;
+    // Container meshes (such as a mob's animation anchor) have no geometry.
     if (vao == 0 || indexCount <= 0) {
         Node::render(shaderProgram, viewProjMatrix);
         return;

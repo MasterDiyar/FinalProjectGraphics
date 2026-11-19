@@ -1,0 +1,8 @@
+GPU,NVIDIA GeForce RTX 3050 Laptop GPU/PCIe/SSE2
+Driver,3.3.0 NVIDIA 621.24
+Mode,Width,Height,Frames,Milliseconds,FPS
+All effects,1280,720,90,2296.72,39.1864
+Shadows off,1280,720,90,1420.08,63.3765
+Rim off,1280,720,90,2079.04,43.2893
+Dissolve off,1280,720,90,2132.62,42.2017
+Low quality,1280,720,90,1441.45,62.4371

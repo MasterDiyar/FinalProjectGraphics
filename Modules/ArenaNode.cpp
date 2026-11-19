@@ -1,3 +1,4 @@
+#include "TriangleWinding.h"
 #include "ArenaNode.h"
 #include "Texture.h"
 #include <glad/glad.h>
@@ -80,6 +81,7 @@ void ArenaNode::initTexturedCube() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    orientTriangles(vertices, indices, 36);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -113,6 +115,7 @@ ArenaNode::ArenaNode(unsigned int cubeVAO, int cubeIndexCount)
     glBindBuffer(GL_ARRAY_BUFFER, fVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(floorVertices), floorVertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fEBO);
+    orientTriangles(floorVertices, floorIndices, 6);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(floorIndices), floorIndices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -141,7 +144,7 @@ ArenaNode::ArenaNode(unsigned int cubeVAO, int cubeIndexCount)
     }
 
     floorNode = std::make_shared<MeshNode>(floorVAO, 6);
-    floorNode->textureId = loadTexture("assets/grass.png");
+    floorNode->textureId = loadTexture("assets/generated/grass.png");
     floorNode->color = Vector3(1.0f, 1.0f, 1.0f);
     floorNode->setScale(Vector3(20.0f, 1.0f, 20.0f));
     floorNode->setPosition(Vector3(0.0f, -0.6f, 0.0f));
@@ -182,7 +185,7 @@ void ArenaNode::decorateArena() {
         }
     }
 
-    unsigned int wallTex = loadTexture("assets/wall.png");
+    unsigned int wallTex = loadTexture("assets/generated/wall.png");
 
     float heightWall1 = 0.95f;
     float heightWall2 = 0.82f;

@@ -28,7 +28,9 @@ float noise3D(vec3 p) {
             mix(hash(cell + vec3(0,1,1)), hash(cell + vec3(1,1,1)), t.x), t.y), t.z);
 }
 
+uniform bool u_Shadows;
 float shadowAt(vec3 world, vec3 n) {
+    if (!u_Shadows) return 0.0;
     vec4 p = u_LightVP * vec4(world + n * 0.05, 1.0);
     vec3 q = p.xyz / p.w * 0.5 + 0.5;
     if (q.z > 1.0) return 0.0;
