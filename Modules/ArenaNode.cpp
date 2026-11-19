@@ -2,10 +2,40 @@
 #include "ArenaNode.h"
 #include "Texture.h"
 #include <glad/glad.h>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <algorithm>
+#include <glm/gtc/matrix_inverse.hpp>
+
+static std::string loadShaderFile(const std::string& filepath) {
+    std::ifstream file(filepath);
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open shader file: " + filepath);
+    }
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
+
+static GLuint compileShader(GLenum type, const std::string& source) {
+    const char* src = source.c_str();
+    GLuint shader = glCreateShader(type);
+    glShaderSource(shader, 1, &src, NULL);
+    glCompileShader(shader);
+    GLint compiled = GL_FALSE;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+    if (!compiled) {
+        char log[2048] = {};
+        glGetShaderInfoLog(shader, sizeof(log), nullptr, log);
+        glDeleteShader(shader);
+        throw std::runtime_error(std::string("Shader compilation failed: ") + log);
+    }
+    return shader;
+}
 
 void ArenaNode::initTexturedCube() {
     float vertices[] = {
-
         -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
          0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
          0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
@@ -26,15 +56,15 @@ void ArenaNode::initTexturedCube() {
          0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
          0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
 
-         -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-          0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-          0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-         -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
 
-         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-          0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-          0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-         -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f
     };
 
     unsigned int indices[] = {
@@ -67,6 +97,7 @@ void ArenaNode::initTexturedCube() {
 ArenaNode::ArenaNode(unsigned int cubeVAO, int cubeIndexCount)
     : cubeVAO(cubeVAO), cubeIndexCount(cubeIndexCount) {
     initTexturedCube();
+
     float floorVertices[] = {
         -0.5f, 0.0f, -0.5f,    0.0f, 1.0f, 0.0f,   0.0f, 0.0f,
          0.5f, 0.0f, -0.5f,    0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
@@ -95,6 +126,23 @@ ArenaNode::ArenaNode(unsigned int cubeVAO, int cubeIndexCount)
     glEnableVertexAttribArray(2);
     glBindVertexArray(0);
 
+    try {
+        std::string roadVertCode = loadShaderFile("shaders/player_sierpinski.vert");
+        std::string roadFragCode = loadShaderFile("shaders/player_sierpinski.frag");
+
+        GLuint rvs = compileShader(GL_VERTEX_SHADER, roadVertCode);
+        GLuint rfs = compileShader(GL_FRAGMENT_SHADER, roadFragCode);
+        noizeShaderProgram = glCreateProgram();
+        glAttachShader(noizeShaderProgram, rvs);
+        glAttachShader(noizeShaderProgram, rfs);
+        glLinkProgram(noizeShaderProgram);
+        glDeleteShader(rvs);
+        glDeleteShader(rfs);
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Road shader loading error: " << e.what() << std::endl;
+    }
+
     floorNode = std::make_shared<MeshNode>(floorVAO, 6);
     floorNode->textureId = loadTexture("assets/generated/grass.png");
     floorNode->color = Vector3(1.0f, 1.0f, 1.0f);
@@ -105,30 +153,37 @@ ArenaNode::ArenaNode(unsigned int cubeVAO, int cubeIndexCount)
     decorateArena();
 }
 
-std::shared_ptr<MeshNode> ArenaNode::addBlock(Vector3 position, Vector3 scale, Vector3 color, unsigned int textureId) {
+std::shared_ptr<MeshNode> ArenaNode::addBlock(Vector3 position, Vector3 scale, Vector3 color, unsigned int textureId, bool addToSceneTree) {
     auto block = std::make_shared<MeshNode>(texturedCubeVAO, texturedCubeIndexCount);
     block->setPosition(position);
     block->setScale(scale);
     block->color = color;
     block->textureId = textureId;
-    addChild(block);
+    if (addToSceneTree) 
+        addChild(block);
     arenaBlocks.push_back(block);
     return block;
 }
 
 void ArenaNode::decorateArena() {
-    unsigned int roadTex = loadTexture("assets/generated/road.png");
+    unsigned int roadTex = loadTexture("assets/road.png");
+    roadTextureId = roadTex;
+    roadBlocks.clear();
 
-    for (int x = 0; x < 10; ++x)
+    for (int x = 0; x < 10; ++x) {
         for (int z = 0; z < 10; ++z) {
             bool path = x == 4 || x == 5 || z == 4 || z == 5;
             if (!path) continue;
 
-            float shade = (x + z) % 2 ? 0.03f : 0.f;
-            addBlock(Vector3(-9.f + x * 2, -0.49f, -9.f + z * 2),
+            auto roadBlock = addBlock(
+                Vector3(-9.f + x * 2, -0.49f, -9.f + z * 2),
                 Vector3(1.96f, 0.02f, 1.96f),
-                Vector3(1.0f, 1.0f, 1.0f), roadTex);
+                Vector3(1.0f, 1.0f, 1.0f),
+                roadTex
+            );
+            roadBlocks.push_back(roadBlock);
         }
+    }
 
     unsigned int wallTex = loadTexture("assets/generated/wall.png");
 
@@ -147,6 +202,35 @@ void ArenaNode::decorateArena() {
             addBlock(Vector3(side * 10.3f, 1.6f, corner * 10.3f), Vector3(1.2f, 0.2f, 1.2f), Vector3(0.7f, 0.65f, 0.4f), 0);
         }
     }
-
 }
+void ArenaNode::render(GLuint shaderProgram, const glm::mat4& viewProjMatrix) {
+    glUseProgram(shaderProgram);
+    if (floorNode) {
+        floorNode->render(shaderProgram, viewProjMatrix);
+    }
+    for (const auto& block : arenaBlocks) {
+        if (!block) continue;
+        if (std::find(roadBlocks.begin(), roadBlocks.end(), block) == roadBlocks.end()) {
+            block->render(shaderProgram, viewProjMatrix);
+        }
+    }
 
+    // 2. Блоки дороги — через noizeShaderProgram
+    if (noizeShaderProgram != 0) {
+        glUseProgram(noizeShaderProgram);
+        glUniform1i(glGetUniformLocation(noizeShaderProgram, "u_Tex"), 0);
+        glUniform1i(glGetUniformLocation(noizeShaderProgram, "u_Lighting"), 1);
+        glUniform3f(glGetUniformLocation(noizeShaderProgram, "u_SunDir"), 0.5f, 1.0f, 0.3f);
+        glUniform1f(glGetUniformLocation(noizeShaderProgram, "u_Alpha"), 1.0f);
+        glUniform1i(glGetUniformLocation(noizeShaderProgram, "u_UseNoise"), 1);
+
+        for (const auto& block : roadBlocks) {
+            if (block) {
+                block->render(noizeShaderProgram, viewProjMatrix);
+            }
+        }
+    }
+
+    // Возвращаем активный шейдер обратно на основной
+    glUseProgram(shaderProgram);
+}
