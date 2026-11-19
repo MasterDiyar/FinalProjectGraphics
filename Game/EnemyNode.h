@@ -6,6 +6,7 @@
 
 class EnemyNode : public Node {
 public:
+    void setDissolveEnabled(bool enabled) { dissolveEnabled = enabled; }
     Fighter stats;
     std::shared_ptr<MeshNode> body;
 
@@ -22,6 +23,7 @@ public:
 private:
     GLuint cubeVao;
     int cubeIndexCount;
+    bool dissolveEnabled = true;
     bool keepDefeatedVisible = false;
     DissolveState dissolve;
     int activeType = 0;

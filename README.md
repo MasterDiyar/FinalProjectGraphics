@@ -174,3 +174,73 @@ chosen by the team.
 
 See [DEMO.md](DEMO.md) for a short presentation sequence and pre-demo checks.
 
+
+## Final demonstration controls and requirements
+
+Team: Aibyn Samat, Diyar Sekezhanov, Dias Zhakin; SE-2415.
+Free-choice topic: **Monster Clash**. Instructor: Saleshova Sabina.
+
+The application explicitly requests **OpenGL 3.3 core**, opens at **1280×720**,
+uses depth testing and outward CCW back-face culling. The 2D HUD disables culling
+and depth for its screen-space pass. All world/depth/effect shaders are files in
+`shaders/`. Missing textures, shader failures and incomplete FBOs print errors.
+
+| Key | Action |
+| --- | --- |
+| WASD | Move |
+| Q / E | Orbit camera |
+| 1 / 2 / 3 | Attack / skill / defend, or choose upgrade |
+| Left click | Select an enabled HUD action |
+| P | Pause gameplay, camera and animations |
+| H / F1 | Show/hide all controls |
+| R | Player rim lighting on/off |
+| T | Enemy dissolve on/off (same death timer) |
+| B | Shadows on/off |
+| J / L | Rotate sun direction and its depth camera |
+| G | Low quality: 1024 map, shadow pass off; press again for full quality |
+| F2 | Enter/exit looping shader preview; resets the current run |
+| Space | Restart after defeat |
+
+The first six seconds automatically preview the shaders, then play begins.
+F2 repeats the preview: the goblin dissolves every three seconds. Use T midway
+through a cycle, R and B for comparisons. P freezes the current pose. F2 can
+return to play immediately. Names, title, floor/kills, toggles and FPS are visible.
+The player can keep clearing floors and restarting without closing the process.
+
+```bat
+run-game.cmd --check-gl
+run-game.cmd --benchmark
+```
+
+The benchmark freezes the same scene and camera, warms up 12 frames and measures
+90 frames per mode using CPU wall time with `glFinish` and buffer swaps. It writes
+`output/benchmark.csv` plus build screenshots. Results are not GPU-only timings.
+The low-quality preset removes the shadow pass; B can turn shadows back on.
+The benchmark requires the `output` directory (included in the submission ZIP).
+
+### Windows 10 / Visual Studio 2022 build alternative
+
+Install Visual Studio 2022 Desktop development with C++, MSVC v143 and Windows
+10 SDK. From its **x64 Native Tools Command Prompt**, in the repository root:
+
+```bat
+msbuild OpenJL.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:PlatformToolset=v143
+x64\Debug\OpenJL.exe
+```
+
+This toolset override is the Windows 10 build path; no project edits or GUI
+retargeting are required. The locally verified build uses Visual Studio 2026
+MSVC v145. A native Windows 10/v143 run has not been tested on this machine.
+The launcher uses the latest installed Visual Studio and the project's v145
+setting. Use the explicit command above if only v143 is installed.
+
+Runtime assets are now original procedural textures in `Assets/generated`.
+See `THIRD_PARTY.md` and the adjacent license. Old external images and disabled
+models are excluded from the submission ZIP. The procedural hero needs no OBJ.
+
+Report: `output/pdf/Monster_Clash_Project_Report.pdf`. To add the public video,
+set `video_url` in `output/pdf/report_metadata.json`, then run
+`python output/pdf/build_report.py` (Python with ReportLab and Pillow, Windows
+Times New Roman fonts). The script also needs `output/benchmark.csv` and the
+included `output/pdf/build_capture.png` (or a new benchmark capture). `SUBMISSION_CHECKLIST.md` tracks the
+remaining upload items. The report acknowledges substantial AI assistance.

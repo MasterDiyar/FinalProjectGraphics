@@ -20,6 +20,9 @@
 #include "DissolveShader.h"
 #include "GameApp.h"
 #include "SpawnLayout.h"
+#include "../Modules/TriangleWinding.h"
+#include <fstream>
+#include <chrono>
 #include <cmath>
 #include <random>
 #include <string>
@@ -34,7 +37,7 @@ namespace {
     int cubeIndexCount = 36;
 
     std::shared_ptr<Node> rootScene;
-    std::shared_ptr<Node> worldScene; 
+    std::shared_ptr<Node> worldScene;
     ShadowMap shadowMap;
     GameState state = GameState::Explore;
     Battle battle;
@@ -50,15 +53,19 @@ namespace {
     std::shared_ptr<MeshNode> floorNode, playerHpBar;
     std::shared_ptr<PlayerNode> player;
     bool keys[256] = {};
-    bool paused = false;
+    bool paused = false, showHelp = false, rimEnabled = true, dissolveEnabled = true;
+    bool showcase = false, intro = false, measuring = false;
+    float introTime = 0.f;
+    float previewTime = 0.f, fps = 0.f;
+    int fpsFrames = 0, fpsStart = 0;
     int lastTime = 0;
-    int windowWidth = 800, windowHeight = 600;
+    int windowWidth = 1280, windowHeight = 720;
     int mouseX = -1, mouseY = -1;
     constexpr float arenaLimit = 9.5f;
     glm::vec3 cameraEye(0.f, 7.f, 9.f);
     glm::vec3 cameraTarget(0.f);
-    float cameraAngle = 0.0f; 
-    float cameraShake = 0.f, shakeTime = 0.f; 
+    float cameraAngle = 0.0f;
+    float cameraShake = 0.f, shakeTime = 0.f;
     glm::vec3 shakeOffset(0.f);
 
     Vector3 worldPosition(const std::shared_ptr<MeshNode>& node) {
@@ -105,89 +112,7 @@ namespace {
         cameraShake = std::max(cameraShake, shake);
     }
 
-    const char* vertexShaderSrc =
-        "#version 330 core\n"
-        "layout (location = 0) in vec3 aPos;\n"
-        "layout (location = 2) in vec2 aUV;\n"
-        "uniform mat4 u_MVP;\n"
-        "uniform mat4 u_Model;\n"
-        "out vec3 vWorld;\n"
-        "out vec2 vUV;\n"
-        "void main()\n"
-        "{\n"
-        "   vUV = aUV;\n"
-        "   vWorld = (u_Model * vec4(aPos, 1.0)).xyz;\n"
-        "   gl_Position = u_MVP * vec4(aPos, 1.0);\n"
-        "}\n";
-
-    const char* fragmentShaderSrc =
-        "#version 330 core\n"
-        "in vec2 vUV;\n"
-        "in vec3 vWorld;\n"
-        "out vec4 FragColor;\n"
-        "uniform vec3 u_Color;\n"
-        "uniform sampler2D u_Tex;\n"
-        "uniform bool u_UseTex;\n"
-        "uniform bool u_Lighting;\n"
-        "uniform float u_HitFlash;\n"
-        "uniform float u_Alpha;\n"
-        "uniform vec3 u_SunDir;\n"
-        "uniform mat4 u_LightVP;\n"
-        "uniform sampler2D u_ShadowMap;\n"
-        "float shadowAt(vec3 world, vec3 n) {\n"
-        "   vec4 p = u_LightVP * vec4(world + n * 0.05, 1.0);\n"
-        "   vec3 q = p.xyz / p.w * 0.5 + 0.5;\n"
-        "   if (q.z > 1.0) return 0.0;\n"
-        "   vec2 texel = 1.0 / vec2(textureSize(u_ShadowMap, 0));\n"
-        "   float shadow = 0.0;\n"
-        "   for (int x = -1; x <= 1; ++x)\n"
-        "       for (int y = -1; y <= 1; ++y)\n"
-        "           shadow += (q.z - 0.001 > textureLod(u_ShadowMap, q.xy + vec2(x, y) * texel, 0.0).r) ? 1.0 : 0.0;\n"
-        "   return shadow / 9.0;\n"
-        "}\n"
-        "void main() {\n"
-        "   vec3 c = u_UseTex ? texture(u_Tex, vUV).rgb * u_Color : u_Color;\n"
-        "   c = mix(c, vec3(1.0, 0.25, 0.2), clamp(u_HitFlash, 0.0, 1.0));\n"
-        "   if (u_Lighting) {\n"
-        "       vec3 n = normalize(cross(dFdx(vWorld), dFdy(vWorld)));\n"
-        "       float diffuse = max(dot(n, normalize(u_SunDir)), 0.0);\n"
-        "       c *= 0.45 + 0.55 * diffuse * (1.0 - 0.8 * shadowAt(vWorld, n));\n"
-        "   }\n"
-        "   FragColor = vec4(c, u_Alpha);\n"
-        "}\n";
-
-    GLuint compileShader(GLenum type, const char* source) {
-        GLuint shader = glCreateShader(type);
-        glShaderSource(shader, 1, &source, NULL);
-        glCompileShader(shader);
-        GLint compiled = GL_FALSE;
-        glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-        if (!compiled) {
-            char log[2048] = {};
-            glGetShaderInfoLog(shader, sizeof(log), nullptr, log);
-            glDeleteShader(shader);
-            throw std::runtime_error(std::string("Shader compilation failed: ") + log);
-        }
-        return shader;
-    }
-
-    void initShaders() {
-        GLuint vs = compileShader(GL_VERTEX_SHADER, vertexShaderSrc);
-        GLuint fs = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSrc);
-        shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vs);
-        glAttachShader(shaderProgram, fs);
-        glLinkProgram(shaderProgram);
-        glDeleteShader(vs);
-        glDeleteShader(fs);
-        GLint linked = GL_FALSE;
-        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &linked);
-        if (!linked) {
-            char log[2048] = {};
-            glGetProgramInfoLog(shaderProgram, sizeof(log), nullptr, log);
-            throw std::runtime_error(std::string("Shader linking failed: ") + log);
-        }
-    }
+    void initShaders() { shaderProgram = loadShaderProgram("shaders/world.vert", "shaders/world.frag"); }
 
     void initCube() {
         float vertices[] = {
@@ -223,14 +148,15 @@ namespace {
         };
 
         unsigned int indices[] = {
-            0,  1,  2,   2,  3,  0,    
-            4,  5,  6,   6,  7,  4,    
-            8,  9, 10,  10, 11,  8,    
-           12, 13, 14,  14, 15, 12,   
-           16, 17, 18,  18, 19, 16,    
-           20, 21, 22,  22, 23, 20     
+            0,  1,  2,   2,  3,  0,
+            4,  5,  6,   6,  7,  4,
+            8,  9, 10,  10, 11,  8,
+           12, 13, 14,  14, 15, 12,
+           16, 17, 18,  18, 19, 16,
+           20, 21, 22,  22, 23, 20
         };
 
+        orientTriangles(vertices, indices, 36);
         GLuint VBO, EBO;
         glGenVertexArrays(1, &cubeVAO);
         glGenBuffers(1, &VBO);
@@ -320,7 +246,7 @@ namespace {
     }
 
     void chooseAction(unsigned char k) {
-        if (paused) return;
+        if (paused || showcase) return;
         if (state == GameState::Battle) {
             if (!battle.playerTurn || battle.finished || playerMotion.active() || enemyMotion.active()) return;
             if (k < '1' || k > '3') return;
@@ -355,6 +281,11 @@ namespace {
 
     void keyDown(unsigned char k, int, int) {
         k = static_cast<unsigned char>(std::tolower(k));
+        if (k == 'h') { showHelp = !showHelp; return; }
+        if (k == 'r') { rimEnabled = !rimEnabled; return; }
+        if (k == 't') { dissolveEnabled = !dissolveEnabled; return; }
+        if (k == 'b') { ShadowMap::enabled = !ShadowMap::enabled; return; }
+        if (k == 'g') { bool low = shadowMap.resolution == 2048; shadowMap.setResolution(low ? 1024 : 2048); ShadowMap::enabled = !low; return; }
         if (k == 'p') {
             paused = !paused;
             std::fill(std::begin(keys), std::end(keys), false);
@@ -363,6 +294,14 @@ namespace {
         if (paused) return;
         keys[k] = true;
         chooseAction(k);
+    }
+
+    void specialKey(int key, int, int) {
+        if (key == GLUT_KEY_F1) showHelp = !showHelp;
+        if (key == GLUT_KEY_F2) {
+            intro = false; showcase = !showcase; previewTime = 0.f; resetRun();
+            if (showcase) for (int i = 0; i < 3; ++i) enemies[i]->spawn(i, 1.f, Vector3(float(i-1)*2.5f, 0, -2));
+        }
     }
 
     void refreshHud();
@@ -380,6 +319,9 @@ namespace {
 
     void refreshHud() {
         HudState snapshot;
+        snapshot.help = showHelp; snapshot.rim = rimEnabled; snapshot.dissolve = dissolveEnabled;
+        snapshot.shadows = ShadowMap::enabled; snapshot.fps = fps;
+        snapshot.lowQuality = shadowMap.resolution == 1024; snapshot.showcase = showcase;
         snapshot.state = state;
         snapshot.player = player->stats;
         if (currentEnemy >= 0) snapshot.enemy = enemies[currentEnemy]->stats;
@@ -388,7 +330,7 @@ namespace {
         snapshot.metaAttackBonus = metaAttackBonus;
         snapshot.remaining = enemiesRemaining();
         snapshot.total = enemies.size();
-        snapshot.paused = paused;
+        snapshot.paused = paused && !measuring;
         snapshot.resolving = playerMotion.active() || enemyMotion.active();
         snapshot.playerTurn = battle.playerTurn;
         snapshot.finished = battle.finished;
@@ -429,6 +371,18 @@ namespace {
 
     void updateGame(float dt) {
         if (paused) return;
+        if (keys['j']) ShadowMap::sunAngle += dt;
+        if (keys['l']) ShadowMap::sunAngle -= dt;
+        if (showcase) {
+            if (intro && (introTime += dt) > 6.f) { intro = false; showcase = false; resetRun(); return; }
+            previewTime += dt;
+            if (previewTime > 3.f) {
+                previewTime = 0.f;
+                for (int i = 0; i < 3; ++i) enemies[i]->spawn(i, 1.f, Vector3(float(i-1)*2.5f, 0, -2));
+            }
+            if (previewTime > 1.f) enemies[1]->stats.hp = 0;
+            return;
+        }
         shakeTime += dt;
         cameraShake = std::max(0.f, cameraShake - 3.f * dt);
         shakeOffset = glm::vec3(std::sin(shakeTime * 90.f), std::sin(shakeTime * 71.f + 1.3f), 0.f)
@@ -483,8 +437,8 @@ namespace {
     }
 
     glm::mat4 updateCamera(float dt) {
-        if (keys['q']) cameraAngle += 2.0f * dt;
-        if (keys['e']) cameraAngle -= 2.0f * dt;
+        if (!paused && keys['q']) cameraAngle += 2.0f * dt;
+        if (!paused && keys['e']) cameraAngle -= 2.0f * dt;
 
         Vector3 position = player->getPosition();
         glm::vec3 hero(position.X, position.Y, position.Z);
@@ -521,6 +475,8 @@ namespace {
         int now = glutGet(GLUT_ELAPSED_TIME);
         float dt = std::clamp((now - lastTime) / 1000.0f, 0.0f, 0.1f);
         lastTime = now;
+        ++fpsFrames;
+        if (now - fpsStart >= 500) { fps = fpsFrames * 1000.f / (now - fpsStart); fpsFrames = 0; fpsStart = now; }
 
         updateGame(dt);
 
@@ -529,10 +485,15 @@ namespace {
 
         refreshHud();
         rootScene->update(paused ? 0.f : dt);
-        shadowMap.begin();
-        worldScene->render(shadowMap.program, ShadowMap::sunMatrix());
-        shadowMap.end(windowWidth, windowHeight);
+        player->configureRendering(cameraEye + shakeOffset, shadowMap.program, rimEnabled);
+        for (auto& enemy : enemies) enemy->setDissolveEnabled(dissolveEnabled);
+        if (ShadowMap::enabled) {
+            shadowMap.begin();
+            worldScene->render(shadowMap.program, ShadowMap::sunMatrix());
+            shadowMap.end(windowWidth, windowHeight);
+        }
         glUseProgram(shaderProgram);
+        glUniform1i(glGetUniformLocation(shaderProgram, "u_Shadows"), ShadowMap::enabled);
         glUniform1i(glGetUniformLocation(shaderProgram, "u_Lighting"), GL_TRUE);
         glUniform1f(glGetUniformLocation(shaderProgram, "u_Alpha"), 1.f);
         const glm::vec3 sunDirection = ShadowMap::sunDirection();
@@ -540,14 +501,56 @@ namespace {
         glUniform3fv(glGetUniformLocation(shaderProgram, "u_SunDir"), 1, &sunDirection[0]);
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "u_LightVP"), 1, GL_FALSE, &sunMatrix[0][0]);
         glUniform1i(glGetUniformLocation(shaderProgram, "u_ShadowMap"), 1);
-        glActiveTexture(GL_TEXTURE1); 
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, shadowMap.texture);
         glActiveTexture(GL_TEXTURE0);
         rootScene->render(shaderProgram, proj * view);
-        glActiveTexture(GL_TEXTURE1); 
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, 0);
         glActiveTexture(GL_TEXTURE0);
         glutSwapBuffers();
+    }
+
+    void captureFrame(const std::string& path) {
+        std::vector<unsigned char> pixels(windowWidth * windowHeight * 3);
+        glReadBuffer(GL_FRONT);
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        glReadPixels(0, 0, windowWidth, windowHeight, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+        std::ofstream image(path, std::ios::binary);
+        image << "P6\n" << windowWidth << " " << windowHeight << "\n255\n";
+        for (int y = windowHeight - 1; y >= 0; --y)
+            image.write(reinterpret_cast<const char*>(pixels.data() + y * windowWidth * 3), windowWidth * 3);
+    }
+
+    int benchmark() {
+        std::ofstream csv("output/benchmark.csv");
+        if (!csv) { std::cerr << "Cannot write output/benchmark.csv\n"; return 1; }
+        csv << "GPU," << glGetString(GL_RENDERER) << "\nDriver," << glGetString(GL_VERSION) << "\n";
+        csv << "Mode,Width,Height,Frames,Milliseconds,FPS\n";
+        intro = false; showcase = true; paused = true; measuring = true;
+        player->setPosition(Vector3(0,0,0));
+        for (int i = 0; i < 3; ++i) enemies[i]->spawn(i, 1.f, Vector3(float(i-1)*2.5f, 0, -2));
+        enemies[1]->stats.hp = 0; enemies[1]->_Process(0.45f);
+        cameraEye = glm::vec3(0,7,9); cameraTarget = glm::vec3(0,0,-1);
+        const char* modes[] = {"All effects", "Shadows off", "Rim off", "Dissolve off", "Low quality"};
+        // Clear the legacy-extension probe error produced by some GLAD versions in a core context.
+        while (glGetError() != GL_NO_ERROR) {}
+        for (int mode = 0; mode < 5; ++mode) {
+            ShadowMap::enabled = mode != 1 && mode != 4; rimEnabled = mode != 2; dissolveEnabled = mode != 3;
+            shadowMap.setResolution(mode == 4 ? 1024 : 2048);
+            for (int i = 0; i < 12; ++i) display();
+            glFinish();
+            auto start = std::chrono::steady_clock::now();
+            constexpr int frames = 90;
+            for (int i = 0; i < frames; ++i) { display(); glFinish(); }
+            double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-start).count();
+            csv << modes[mode] << ",1280,720," << frames << "," << ms << "," << frames * 1000.0/ms << "\n";
+            captureFrame("output/benchmark-" + std::to_string(mode) + ".ppm");
+            GLenum error = glGetError();
+            if (error != GL_NO_ERROR) { std::cerr << "OpenGL benchmark error: " << error << "\n"; return 2; }
+        }
+        std::cout << "Benchmark saved to output/benchmark.csv\n";
+        return 0;
     }
 
     void timer(int) {
@@ -558,9 +561,12 @@ namespace {
 } // namespace
 
 int runGame(int argc, char** argv) {
+    const bool runBenchmark = argc > 1 && std::string(argv[1]) == "--benchmark";
     glutInit(&argc, argv);
+    glutInitContextVersion(3, 3);
+    glutInitContextProfile(GLUT_CORE_PROFILE);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(800, 600);
+    glutInitWindowSize(1280, 720);
     glutCreateWindow("Monster Clash");
 
     if (!gladLoadGL()) {
@@ -569,6 +575,9 @@ int runGame(int argc, char** argv) {
     }
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
 
     try {
         initShaders();
@@ -581,11 +590,15 @@ int runGame(int argc, char** argv) {
     }
     initCube();
     initScene();
+    if (runBenchmark) return benchmark();
+    intro = true; showcase = true;
+    for (int i = 0; i < 3; ++i) enemies[i]->spawn(i, 1.f, Vector3(float(i-1)*2.5f, 0, -2));
 
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutIgnoreKeyRepeat(1);
     glutKeyboardFunc(keyDown);
+    glutSpecialFunc(specialKey);
     glutKeyboardUpFunc(keyUp);
     glutMouseFunc(mouseDown);
     glutPassiveMotionFunc(mouseMove);

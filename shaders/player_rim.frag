@@ -30,7 +30,7 @@ void main() {
     float rimFactor = 1.0 - max(dotNV, 0.0);
     
     // Возводим в большую степень (например, 4.0 или 5.0), чтобы полоска была узкой
-    float rim = pow(rimFactor, 4.0) * u_RimIntensity;
+    float rim = pow(rimFactor, max(u_RimPower, 0.01)) * u_RimIntensity;
 
     // КРИТИЧЕСКИ ВАЖНО: 
     // Вместо сложения (+) мы используем интерполяцию или контролируемое добавление,

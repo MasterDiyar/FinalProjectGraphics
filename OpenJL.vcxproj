@@ -180,10 +180,10 @@
     <ClInclude Include="Modules\PlayerNode.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\..\..\..\Downloads\seamless-green-grass-pattern_1284-52275.png" />
+
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\outline.frag" />
+    <None Include="shaders\world.vert" /><None Include="shaders\world.frag" /><None Include="shaders\shadow_depth.vert" /><None Include="shaders\shadow_depth.frag" /><None Include="shaders\outline.frag" />
     <None Include="shaders\enemy_dissolve.vert" />
     <None Include="shaders\enemy_dissolve.frag" />
     <None Include="shaders\outline.vert" />

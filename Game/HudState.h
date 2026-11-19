@@ -10,6 +10,8 @@ struct HudState {
     int floor = 1, kills = 0, metaAttackBonus = 0;
     size_t remaining = 0, total = 0;
     bool paused = false, resolving = false, playerTurn = true, finished = false;
+    bool help = false, rim = true, dissolve = true, shadows = true, lowQuality = false, showcase = false;
+    float fps = 0.f;
     int hover = -1; // index of the enabled button under the mouse, or -1
     std::string log;
 

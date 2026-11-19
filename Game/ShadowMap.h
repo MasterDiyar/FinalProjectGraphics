@@ -4,17 +4,21 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
 #include <string>
+#include "ShaderProgram.h"
 
 // Depth-only render target for the sun. Render the world into it with `program`,
 // then sample `texture` from the main shader to find out what is in shadow.
 class ShadowMap {
 public:
     static constexpr int Size = 2048;
+    int resolution = Size;
+    inline static bool enabled = true;
+    inline static float sunAngle = 0.f;
     GLuint program = 0; // depth-only shader; uses u_MVP like the main shader
     GLuint texture = 0;
 
     // Unit vector pointing from the scene towards the sun.
-    static glm::vec3 sunDirection() { return glm::normalize(glm::vec3(-0.4f, 1.f, 0.6f)); }
+    static glm::vec3 sunDirection() { return glm::normalize(glm::vec3(-0.4f * cos(sunAngle) + 0.6f * sin(sunAngle), 1.f, 0.4f * sin(sunAngle) + 0.6f * cos(sunAngle))); }
 
     // Orthographic view-projection of the sun, wide enough for the whole arena.
     static glm::mat4 sunMatrix() {
@@ -47,29 +51,20 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         if (!complete) throw std::runtime_error("Shadow map framebuffer is incomplete");
 
-        const GLuint vs = compile(GL_VERTEX_SHADER,
-            "#version 330 core\n"
-            "layout (location = 0) in vec3 aPos;\n"
-            "uniform mat4 u_MVP;\n"
-            "void main() { gl_Position = u_MVP * vec4(aPos, 1.0); }\n");
-        const GLuint fs = compile(GL_FRAGMENT_SHADER,
-            "#version 330 core\n"
-            "void main() {}\n");
-        program = glCreateProgram();
-        glAttachShader(program, vs);
-        glAttachShader(program, fs);
-        glLinkProgram(program);
-        glDeleteShader(vs);
-        glDeleteShader(fs);
-        GLint linked = GL_FALSE;
-        glGetProgramiv(program, GL_LINK_STATUS, &linked);
-        if (!linked) throw std::runtime_error("Shadow shader linking failed");
+        program = loadShaderProgram("shaders/shadow_depth.vert", "shaders/shadow_depth.frag");
+    }
+
+    void setResolution(int size) {
+        resolution = size;
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, size, size, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     // Start the depth pass: render the world with `program` and sunMatrix() as the view-projection.
     void begin() {
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glViewport(0, 0, Size, Size);
+        glViewport(0, 0, resolution, resolution);
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_POLYGON_OFFSET_FILL); // reduces self-shadowing stripes
         glPolygonOffset(2.f, 4.f);
