@@ -23,8 +23,10 @@ Video: https://youtu.be/-plQpir5YrU
 The recording frames are cropped to the game window and retain their original
 colours. Controlled on/off shader comparisons come from the same frozen scene of
 our measured build, rather than from unmatched video frames. The FPS chart uses
-`output/benchmark.csv`, measured on 19 November 2026, before later road-shader
-experiments. Sources, equations, qualifications and references are in the notes.
+`output/benchmark-release-2026-11-20.csv`, measured in Release x64 on 20 November
+2026: 141.1 FPS with all effects and approximately 144 FPS in the other modes.
+Ordinary gameplay uses a separate 16 ms GLUT timer (approximately 60 FPS). An
+explicit V-Sync setting has not been verified. The old Debug CSV is preserved. Sources, equations, qualifications and references are in the notes.
 
 The PDF contains still frames with clickable video links. It does not embed a
 moving video. Internet access is needed to open YouTube. For the live demo, use

@@ -95,14 +95,14 @@ note(s,'3:25–3:50 · Aibyn\nEach enemy type has a continuous sine-based idle l
 }
 // 8 — Native editable chart; actual measured snapshot, not an estimate.
 {
-const s=slide('39 FPS with every effect enabled');
-text(s,'Debug x64 · 1280 × 720 · RTX 3050 Laptop GPU',64,149,1140,38,25,C.muted);
-const vals=[39.1864,63.3765,43.2893,42.2017,62.4371];
-s.charts.add('bar',{position:{left:64,top:208,width:805,height:393},categories:['All effects','Shadows off','Rim off','Dissolve off','Low quality'],series:[{name:'Average FPS',values:vals,fill:'#329E82'}],hasLegend:false,barOptions:{direction:'bar',grouping:'clustered',gapWidth:80},chartFill:C.white,plotAreaFill:C.white,xAxis:{textStyle:{typeface:'Arial',fontSize:21,fill:C.ink}},yAxis:{textStyle:{typeface:'Arial',fontSize:18,fill:C.muted},majorGridlines:{fill:C.line,width:1},numberFormatCode:'0'},dataLabels:{showValue:true,position:'outEnd',numberFormatCode:'0.0',textStyle:{typeface:'Arial',fontSize:22,fill:C.ink,bold:true}}});
+const s=slide('141 FPS with every effect enabled');
+text(s,'Release x64 · 1280 × 720 · RTX 3050 Laptop GPU',64,149,1140,38,25,C.muted);
+const vals=[141.098,144.021,143.971,143.970,144.034];
+s.charts.add('bar',{position:{left:64,top:208,width:805,height:393},categories:['All effects','Shadows off','Rim off','Dissolve off','Low quality'],series:[{name:'Average FPS',values:vals,fill:'#329E82'}],hasLegend:false,barOptions:{direction:'bar',grouping:'clustered',gapWidth:80},chartFill:C.white,plotAreaFill:C.white,xAxis:{textStyle:{typeface:'Arial',fontSize:21,fill:C.ink}},yAxis:{min:0,max:160,majorUnit:40,textStyle:{typeface:'Arial',fontSize:18,fill:C.muted},majorGridlines:{fill:C.line,width:1},numberFormatCode:'0'},dataLabels:{showValue:true,position:'outEnd',numberFormatCode:'0.0',textStyle:{typeface:'Arial',fontSize:22,fill:C.ink,bold:true}}});
 text(s,'30 FPS',936,252,280,65,53,C.ink,true);text(s,'course target',940,325,260,40,25,C.muted);
-text(s,'G → low quality\n≈ 62 FPS',936,427,280,110,29,C.ink,true);
-text(s,'19 Nov build · 12 warm-up + 90 measured frames per mode. Wall time includes swaps and glFinish.',64,652,1140,46,20,C.muted);
-note(s,'3:50–4:20 · Dias\nThese are actual measurements, not values read from a single HUD frame. Every comparison uses the same frozen scene and camera, with twelve warm-up frames and ninety timed frames. Full quality averages 39.2 FPS on the tested laptop. Disabling shadows has the largest improvement. G selects the low-quality preset, which skips shadow rendering and averages 62.4 FPS. These are wall-clock frame rates including swaps and glFinish, not isolated GPU timings. The lab machine should still be checked.\nData: output/benchmark.csv, measured 19 November 2026 before subsequent road-shader experiments. Five regression programs passed for that tested build.');
+text(s,'≈ 60 FPS\nnormal game',936,427,280,110,29,C.ink,true);
+text(s,'20 Nov Release · 12 warm-up + 90 measured frames per mode. Wall time includes swaps and glFinish.',64,652,1140,46,20,C.muted);
+note(s,'3:50–4:20 · Dias\nThese are actual Release x64 measurements from 20 November, using the same frozen scene and camera, twelve warm-up frames and ninety timed frames per mode. All effects average 141.1 FPS; the other modes average about 144 FPS. These are wall-clock frame rates including swaps and glFinish, not isolated GPU timings. Ordinary gameplay uses a 16 ms GLUT timer and therefore updates at approximately 60 FPS; this is a separate path from the benchmark. We have not verified an explicit V-Sync setting. The lab machine should still be checked.\nData: output/benchmark-release-2026-11-20.csv. Earlier Debug results are retained separately in output/benchmark.csv.');
 }
 // 9 — Ownership, live demo and a real linked recording.
 {

@@ -574,6 +574,9 @@ int runGame(int argc, char** argv) {
         return -1;
     }
 
+    std::cout << "OpenGL renderer: " << glGetString(GL_RENDERER)
+        << "\nOpenGL version: " << glGetString(GL_VERSION) << std::endl;
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
