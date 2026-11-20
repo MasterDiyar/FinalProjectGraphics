@@ -261,9 +261,9 @@ story.append(Pipeline())
 add('Figure 2. The dissolve mask is shared by the depth and colour passes. The colour pass samples the depth texture to compute visibility.','small')
 from PIL import Image as PILImage
 capture=HERE/'build_capture.png'
-if (ROOT/'output/benchmark-0.ppm').exists(): PILImage.open(ROOT/'output/benchmark-0.ppm').convert('L').save(capture)
+if (ROOT/'output/benchmark-0.ppm').exists(): PILImage.open(ROOT/'output/benchmark-0.ppm').convert('RGB').save(capture)
 story.append(Image(str(capture),width=W,height=W*720/1280))
-add('Figure 3. Screenshot from our submission build at 1280 x 720. Converted to grayscale for this report; the running game uses colour. The goblin is halfway through its dissolve.','small')
+add('Figure 3. Screenshot from our submission build at 1280 x 720. The goblin is halfway through its dissolve.','small')
 add('The world lighting and dissolve formulas are shown in Sections 4 and 5. The rim calculation uses the actual camera position, and its shader is bypassed for the depth pass. This keeps the player shadow independent of its rim colour. Zero-scale pooled particles, hidden model variants and hidden bars skip rendering, which also avoids inverting singular normal matrices.')
 
 page('12. Contributions, assets and references')

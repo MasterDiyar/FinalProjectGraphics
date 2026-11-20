@@ -364,3 +364,6 @@ FodyWeavers.xsd
 /tmp/
 /output/benchmark-*.ppm
 /output/Monster_Clash_Source.zip
+
+# Presentation chart packaging intermediates
+.chart-data-*/
